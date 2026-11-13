@@ -70,8 +70,9 @@ function pintar(){
     for(const p of items){
       const s=VS.n(p.stock);
       const estado=s>0?'<span class="badge on">Disponible'+(s>1?' · quedan '+s:' · última unidad')+'</span>':'<span class="badge off">Por encargo</span>';
-      const txt='Hola, me interesa '+(c.id==='micado'?'el micado ':'')+p.ref+' '+p.nombre+(p.marca?' ('+p.marca+')':'')+(s>0?'':' por encargo')+'. ¿Está disponible?';
-      h+='<div class="item"><div class="info"><div class="line1"><span class="ref">'+esc(p.ref)+'</span><span class="nm">'+esc(p.nombre)+'</span>'
+      const insp=c.id!=='micado';
+      const txt='Hola, me interesa '+(insp?'el '+p.ref+' (inspirado en '+p.nombre+(p.marca?' de '+p.marca:'')+')':'el micado '+p.ref+' '+p.nombre)+(s>0?'':', por encargo')+'. ¿Está disponible?';
+      h+='<div class="item"><div class="info"><div class="line1"><span class="ref">'+esc(p.ref)+'</span><span class="nm">'+(insp?'Inspirado en ':'')+esc(p.nombre)+'</span>'
         +(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div><div class="meta">'+estado
         +(p.muestra?'<span class="mu">'+VS.DROP+' muestra</span>':'')+'<span class="precio">'+esc(c.precio)+' €</span></div></div>'
         +'<a class="btn ghost pedir" href="'+esc(waLink(txt))+'" target="_blank" rel="noopener" aria-label="Pedir '+esc(p.nombre)+' por WhatsApp">Pedir</a></div>';
