@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catálogo A4 · Colonias &amp; Micados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=Jost:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/estilo.css">
+<style>
+@page{size:A4;margin:0}
+.tool{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;border-bottom:1px solid var(--line)}
+.stage{display:flex;justify-content:center;padding-block:20px}
+.scaler{transform-origin:top center;box-shadow:0 2px 16px rgba(0,0,0,.18)}
+@media print{
+  body{padding:0;background:#fff}
+  .tool{display:none}
+  .stage{padding:0;display:block;height:auto!important}
+  .scaler{transform:none!important;box-shadow:none;height:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="tool">
+  <a class="chip" href="./">← Volver</a>
+  <button class="chip" data-m="bn">Completo B/N</button>
+  <button class="chip" data-m="color">Completo color</button>
+  <button class="chip" data-m="stock">Solo en stock (B/N)</button>
+  <button class="btn dark" id="imprimir">Imprimir / guardar PDF</button>
+</div>
+<div class="stage"><div class="scaler" id="hoja"><p class="note" style="padding:40px">Cargando catálogo…</p></div></div>
+<script src="assets/comun.js"></script>
+<script>
+const st=document.createElement('style'); st.textContent=VS.CAT_CSS; document.head.appendChild(st);
+let datos=null, modo=new URLSearchParams(location.search).get('modo')||'bn';
+if(!['bn','color','stock'].includes(modo)) modo='bn';
+function pintar(){
+  document.querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===modo)));
+  if(datos) document.getElementById('hoja').innerHTML=VS.catalogoA4(datos,modo);
+  escalar();
+}
+function escalar(){
+  const h=document.getElementById('hoja'); const w=document.documentElement.clientWidth-32; const s=Math.min(1,w/794);
+  h.style.transform='scale('+s+')'; h.style.height=(1123*s)+'px'; h.style.width='794px';
+  h.parentElement.style.height=(1123*s+40)+'px';
+}
+addEventListener('resize',escalar);
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-m]'); if(b){ modo=b.dataset.m; history.replaceState(null,'','?modo='+modo); pintar(); }
+});
+document.getElementById('imprimir').onclick=()=>window.print();
+VS.cargarStock().then(d=>{datos=d;pintar();}).catch(e=>{document.getElementById('hoja').innerHTML='<p class="note err" style="padding:40px">'+VS.esc(e.message)+'</p>';});
+</script>
+</body>
+</html>

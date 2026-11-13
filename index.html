@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Colonias &amp; Micados · Venta solidaria 4.º ESO</title>
+<meta name="description" content="Catálogo de colonias y micados de la venta solidaria para la excursión de 4.º ESO del IES Ribeira do Louro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=Jost:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/estilo.css">
+<style>
+.hero{display:flex;flex-direction:column;gap:10px}
+.contacto{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tel{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;user-select:all}
+.pedir{font-size:13px;min-height:38px;padding:0 12px}
+.precio{font-weight:600;font-variant-numeric:tabular-nums}
+.pie{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top hero">
+    <span class="eyebrow" id="titulo">Venta solidaria · Excursión de 4.º ESO · IES Ribeira do Louro</span>
+    <h1>Colonias <em>&amp;</em> Micados</h1>
+    <p class="note">Perfumes de equivalencia (Eau de Parfum 100 ml) y ambientadores micado. Todo lo recaudado ayuda a pagar la excursión. <span id="act"></span></p>
+    <div class="contacto">
+      <span class="note">Pedidos:</span><span class="tel" id="tel">620 589 262</span>
+      <a class="btn" id="wa" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+    </div>
+  </header>
+
+  <div class="bar" role="group" aria-label="Filtro">
+    <button class="chip" data-f="todo" aria-pressed="true">Todo</button>
+    <button class="chip" data-f="ya" aria-pressed="false">Disponible ya</button>
+    <button class="chip" data-f="enc" aria-pressed="false">Por encargo</button>
+    <button class="chip" data-f="muestra" aria-pressed="false">Con muestra para oler</button>
+  </div>
+
+  <div id="lista"><div class="empty">Cargando catálogo…</div></div>
+
+  <div class="pie">
+    <a class="chip" href="catalogo.html">Ver catálogo para imprimir</a>
+    <span class="note">La gotita indica que hay muestra para oler antes de comprar.</span>
+  </div>
+</div>
+<script src="assets/comun.js"></script>
+<script>
+let datos=null, filtro='todo';
+const pasa=p=>filtro==='ya'?VS.n(p.stock)>0:filtro==='enc'?VS.n(p.stock)===0:filtro==='muestra'?!!p.muestra:true;
+function waLink(texto){ return 'https://wa.me/34'+VS.telLimpio(datos.telefono)+'?text='+encodeURIComponent(texto); }
+function pintar(){
+  const esc=VS.esc; let h='';
+  for(const c of datos.categorias){
+    const items=VS.ordenados(datos,c.id).filter(pasa); if(!items.length) continue;
+    h+='<div class="group"><div class="ghead"><h2>'+esc(c.nombre)+'<span class="sub">'+esc(c.sub)+'</span></h2><span class="p">'+esc(c.precio)+' €</span></div>';
+    for(const p of items){
+      const s=VS.n(p.stock);
+      const estado=s>0?'<span class="badge on">Disponible'+(s>1?' · quedan '+s:' · última unidad')+'</span>':'<span class="badge off">Por encargo</span>';
+      const txt='Hola, me interesa '+(c.id==='micado'?'el micado ':'')+p.ref+' '+p.nombre+(p.marca?' ('+p.marca+')':'')+(s>0?'':' por encargo')+'. ¿Está disponible?';
+      h+='<div class="item"><div class="info"><div class="line1"><span class="ref">'+esc(p.ref)+'</span><span class="nm">'+esc(p.nombre)+'</span>'
+        +(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div><div class="meta">'+estado
+        +(p.muestra?'<span class="mu">'+VS.DROP+' muestra</span>':'')+'<span class="precio">'+esc(c.precio)+' €</span></div></div>'
+        +'<a class="btn ghost pedir" href="'+esc(waLink(txt))+'" target="_blank" rel="noopener" aria-label="Pedir '+esc(p.nombre)+' por WhatsApp">Pedir</a></div>';
+    }
+    h+='</div>';
+  }
+  document.getElementById('lista').innerHTML=h||'<div class="empty">No hay productos con este filtro.</div>';
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-f]'); if(!b) return;
+  filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); pintar();
+});
+VS.cargarStock().then(d=>{
+  datos=d;
+  document.getElementById('tel').textContent=d.telefono;
+  document.getElementById('titulo').textContent=d.titulo||'';
+  document.getElementById('act').textContent='Existencias actualizadas a '+VS.fecha(d.actualizado)+'.';
+  document.getElementById('wa').href=waLink('Hola, os escribo por la venta solidaria de colonias y micados de 4.º ESO.');
+  pintar();
+}).catch(e=>{ document.getElementById('lista').innerHTML='<div class="empty err">No se pudo cargar el catálogo. Recarga la página.</div>'; });
+</script>
+</body>
+</html>
