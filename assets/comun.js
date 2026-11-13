@@ -62,6 +62,9 @@
 .page .ft{display:flex;justify-content:center;align-items:center;gap:10px;background:var(--acc);color:#fff;border-radius:6px;padding:6px 16px;flex-shrink:0;position:relative;z-index:1}
 .page .ft .a{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;opacity:.95}
 .page .ft .b{font-size:14.5px;font-weight:600;letter-spacing:.02em}
+.page .ft .qr{background:#fff;border-radius:4px;padding:3px;width:52px;height:52px;flex-shrink:0;margin-left:8px;box-sizing:border-box}
+.page .ft .qr svg{display:block;width:100%;height:100%}
+.page .ft.conqr{padding:4px 6px 4px 16px}
 .page *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 `;
 
@@ -108,11 +111,20 @@
       ? 'Catálogo de productos'
       : ((solo ? 'Disponibles para entrega inmediata · existencias a ' : 'Existencias actualizadas a ') + fecha(datos.actualizado));
     const web = datos.web || (typeof location !== 'undefined' && location.hostname && !['localhost','127.0.0.1'].includes(location.hostname) ? (location.host + (location.pathname.startsWith('/venta-solidaria-4eso') ? '/venta-solidaria-4eso' : '')) : 'ventasolidariadani4eso.github.io');
+    const qr = qrSVG('https://' + web.replace(/^https?:\/\//, '') + '/');
     return '<div class="page' + (color ? ' color' : '') + (solo ? ' stock' : '') + (sinStock ? ' sin-stock' : '') + '">'
       + '<header class="hd"><p class="ey">' + esc(datos.titulo || '') + '</p><h1>Colonias <span>&amp;</span> Micados</h1><p class="fe">' + sub + '</p></header>'
       + '<div class="lg">' + leg + '</div>'
       + '<main class="mn"><div class="col">' + sec('masc') + sec('micado') + '</div><div class="col">' + sec('fem') + sec('nicho') + '</div></main>'
-      + '<footer class="ft"><span class="a">Contacto y pedidos</span><span class="b">' + esc(datos.telefono || '') + '</span><span class="sep" style="opacity:.6;padding:0 4px">·</span><span class="a">Web</span><span class="b">' + esc(web) + '</span></footer></div>';
+      + '<footer class="ft' + (qr ? ' conqr' : '') + '"><span class="a">Contacto y pedidos</span><span class="b">' + esc(datos.telefono || '') + '</span><span class="sep" style="opacity:.6;padding:0 4px">·</span><span class="a">Web</span><span class="b">' + esc(web) + '</span>'
+      + (qr ? '<span class="qr" role="img" aria-label="Código QR de ' + esc(web) + '">' + qr + '</span>' : '') + '</footer></div>';
+  }
+
+  /* QR de la web (necesita assets/qrcode.js cargado; si no está, el pie se queda sin QR) */
+  function qrSVG(texto) {
+    if (typeof qrcode !== 'function') return '';
+    try { const q = qrcode(0, 'M'); q.addData(texto); q.make(); return q.createSvgTag({ cellSize: 2, margin: 0, scalable: true }); }
+    catch (e) { return ''; }
   }
 
   window.VS = { esc, n, DROP, fecha, hoyISO, cargarStock, ordenados, telLimpio, CAT_CSS, catalogoA4 };
