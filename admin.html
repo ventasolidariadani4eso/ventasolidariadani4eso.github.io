@@ -184,6 +184,11 @@ body.vendedor nav.tabs{display:none}
         <h3>Pedidos apuntados</h3>
         <div class="cards" id="vendPed"></div>
       </div>
+      <div id="vendHoy" hidden>
+        <h3>Vendido hoy <span id="vendHoyN" class="small"></span></h3>
+        <p class="note" style="margin:0 0 10px">Si te has equivocado, pulsa <strong>Anular</strong>.</p>
+        <div id="vendHoyLista"></div>
+      </div>
     </div>
   </section>
 
@@ -319,6 +324,24 @@ function pintarVend(){
   // Pedidos pendientes con su destinatario
   const pend=(G?.encargos||[]).filter(e=>e.estado==='pendiente').slice().reverse();
   $('vendPed').innerHTML=pend.length?pend.map(e=>'<div class="card"><div class="top"><span class="tt">'+esc(nom(e.ref))+' × '+n(e.cant)+'</span><span class="small">'+fmtF(e.fecha)+'</span></div><div class="small">Para: <strong>'+esc(e.cliente||'—')+'</strong>'+(e.contacto?' · '+esc(e.contacto):'')+'</div></div>').join(''):'<p class="small">No hay pedidos pendientes.</p>';
+  // Ventas de hoy — permite anular errores
+  const hoyStr=hoy();
+  const ventasHoy=(G?.ventas||[]).filter(v=>v.fecha===hoyStr).slice().reverse();
+  const divHoy=$('vendHoy');
+  if(ventasHoy.length){
+    divHoy.hidden=false;
+    $('vendHoyN').textContent='('+ventasHoy.length+')';
+    $('vendHoyLista').innerHTML=ventasHoy.map(v=>{
+      const pr=precio(v.ref);
+      return '<div class="vrow">'
+        +'<div class="info"><div class="line1"><span class="ref">'+esc(v.ref)+'</span><span class="nm">'+esc(nom(v.ref))+'</span></div>'
+        +(v.cliente?'<span class="small">'+esc(v.cliente)+'</span>':'')
+        +'</div>'
+        +'<div class="acc"><span class="badge on">'+pr+' €</span>'
+        +'<button class="btn ghost" data-ven="anular" data-id="'+esc(v.id)+'"'+(off?' disabled':'')+' data-confirm="1">Anular</button>'
+        +'</div></div>';
+    }).join('');
+  } else { divHoy.hidden=true; }
 }
 function pintarPanel(){
   if(!stock) return; const R=calc(), ok=conectado&&!!G;
