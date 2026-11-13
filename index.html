@@ -45,7 +45,7 @@
     <p class="note">Perfumes de equivalencia (Eau de Parfum 100 ml) y ambientadores micado. Todo lo recaudado ayuda a pagar la excursión. <span id="act"></span></p>
     <div class="contacto">
       <span class="note">Pedidos:</span><span class="tel" id="tel">620 589 262</span>
-      <a class="btn" id="wa" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      <a class="btn" id="wa" href="#">Escribir por WhatsApp</a>
     </div>
   </header>
 
@@ -61,7 +61,7 @@
 <script>
 let datos=null, filtro='todo';
 const pasa=p=>filtro==='ya'?VS.n(p.stock)>0:filtro==='enc'?VS.n(p.stock)===0:filtro==='muestra'?!!p.muestra:true;
-function waLink(texto){ return 'https://wa.me/34'+VS.telLimpio(datos.telefono)+'?text='+encodeURIComponent(texto); }
+function waLink(texto){ return 'whatsapp://send?phone=34'+VS.telLimpio(datos.telefono)+'&text='+encodeURIComponent(texto); }
 function pintar(){
   const esc=VS.esc; let h='';
   for(const c of datos.categorias){
@@ -75,7 +75,7 @@ function pintar(){
       h+='<div class="item"><div class="info"><div class="line1"><span class="ref">'+esc(p.ref)+'</span><span class="nm">'+(insp?'Inspirado en ':'')+esc(p.nombre)+'</span>'
         +(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div><div class="meta">'+estado
         +(p.muestra?'<span class="mu">'+VS.DROP+' muestra</span>':'')+'<span class="precio">'+esc(c.precio)+' €</span></div></div>'
-        +'<a class="btn ghost pedir" href="'+esc(waLink(txt))+'" target="_blank" rel="noopener" aria-label="Pedir '+esc(p.nombre)+' por WhatsApp">Pedir</a></div>';
+        +'<a class="btn ghost pedir" href="'+esc(waLink(txt))+'" aria-label="Pedir '+esc(p.nombre)+' por WhatsApp">Pedir</a></div>';
     }
     h+='</div>';
   }
