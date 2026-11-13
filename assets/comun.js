@@ -70,6 +70,9 @@
 .page .ft .fila .b{font-size:20px}
 .page .ft .nota{font-size:13px;opacity:.9;max-width:380px;line-height:1.35}
 .page.qrg .pic{max-height:100px;margin-top:8px}
+.page .ft.conqr{background:transparent;color:#111;border:2px solid var(--acc)}
+.page.color .ft.conqr .a{color:var(--acc)}
+.page .ft.conqr .qr{padding:2px}
 .page *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 `;
 
