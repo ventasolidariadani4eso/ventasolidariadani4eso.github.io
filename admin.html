@@ -38,6 +38,15 @@ select,.field input,.field textarea{font:inherit;padding:9px 10px;border:1px sol
 .box{background:var(--chip);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 details>summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
 .small{font-size:13px;color:var(--muted)}
+body.vendedor nav.tabs{display:none}
+.vrow{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.vrow .top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.vrow .acc{display:flex;gap:8px}
+.vrow .acc .btn{min-height:48px;padding:0 18px;font-size:16px}
+.vform{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 80px;gap:8px;background:var(--chip);padding:10px;border-radius:10px}
+.vform input{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);min-height:44px;width:100%}
+.vform .btn{grid-column:1/-1;justify-content:center}
+@media (max-width:480px){.vform{grid-template-columns:minmax(0,1fr) 70px}.vform .cli{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -143,6 +152,14 @@ details>summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
     </div>
   </section>
 
+  <!-- MODO VENDEDOR (pantalla sencilla) -->
+  <section id="v-vend" hidden>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <p class="note">Pulsa <strong>Vendido</strong> cuando entregues uno, o <strong>Pedir</strong> si alguien quiere uno que no llevas o que está agotado.</p>
+      <div id="vendLista"></div>
+    </div>
+  </section>
+
   <!-- AJUSTES -->
   <section id="v-cfg" hidden>
     <div style="display:flex;flex-direction:column;gap:14px">
@@ -158,6 +175,14 @@ details>summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
         <div class="bar"><button class="btn dark" type="submit">Guardar y conectar</button><button class="btn ghost" type="button" id="olvidar">Borrar de este dispositivo</button></div>
         <p class="note" id="cfgMsg"></p>
       </form>
+      <div class="panel" id="otroDisp">
+        <h2>Configurar otro móvil</h2>
+        <p class="note">Lo escanean con la cámara del móvil y queda listo, sin escribir nada ni tener cuenta de GitHub.<br>
+        <strong>Solo vender</strong>: pantalla sencilla con «Vendido» y «Pedir» (para quien vende puerta a puerta). <strong>Gestión completa</strong>: igual que esta página.</p>
+        <div class="bar"><button class="btn dark" type="button" id="qrVer" data-modo="vendedor">QR solo vender</button><button class="btn ghost" type="button" id="qrVer2" data-modo="completo">QR gestión completa</button><button class="btn ghost" type="button" id="qrCopiar" hidden>Copiar enlace</button><button class="btn ghost" type="button" id="qrOcultar" hidden>Ocultar</button></div>
+        <div id="qr" hidden style="background:#fff;padding:16px;border-radius:10px;align-self:flex-start;max-width:100%"></div>
+        <p class="note" id="qrMsg">El código incluye el token y la clave: no lo compartas en grupos ni lo dejes a la vista.</p>
+      </div>
       <form class="panel" id="fCost">
         <h2>Coste por unidad</h2>
         <p class="note">Se usa para las ventas nuevas y como valor por defecto en los pedidos. Los precios de venta están en <code>data/stock.json</code>.</p>
@@ -185,6 +210,7 @@ details>summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
 <div class="toast" id="toast" hidden></div>
 
 <script src="assets/comun.js"></script>
+<script src="assets/qrcode.js"></script>
 <script>
 const $=id=>document.getElementById(id), esc=VS.esc, n=VS.n;
 const CFG_KEY='vs4eso.cfg', STOCK='data/stock.json', GEST='data/ventas.enc.json';
@@ -242,7 +268,28 @@ function calc(){
 }
 
 /* ========== pintado ========== */
-function pintarTodo(){ pintarPanel(); pintarLista(); pintarEnc(); pintarPed(); pintarVen(); pintarCfg(); }
+function pintarTodo(){ pintarPanel(); pintarLista(); pintarEnc(); pintarPed(); pintarVen(); pintarCfg(); pintarVend(); }
+let vendAbierto=null;
+function pintarVend(){
+  if(cfg.modo!=='vendedor'||!stock) return;
+  const R=calc(), off=!conectado||ocupado; let h='';
+  for(const c of stock.categorias){
+    const items=VS.ordenados(stock,c.id); if(!items.length) continue;
+    h+='<div class="group"><div class="ghead"><h2>'+esc(c.nombre)+'</h2><span class="p">'+esc(c.precio)+' €</span></div>';
+    for(const p of items){
+      const s=n(p.stock), r=esc(p.ref), ab=vendAbierto===p.ref, x=R.porRef[p.ref];
+      h+='<div class="vrow"><div class="top"><div class="info"><div class="line1"><span class="ref">'+r+'</span><span class="nm">'+esc(p.nombre)+'</span>'+(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div>'
+        +'<div class="meta">'+(s>0?'<span class="badge on">Quedan '+s+'</span>':'<span class="badge off">Agotado</span>')+(x&&x.encP?'<span>Pedidos: '+x.encP+'</span>':'')+'</div></div>'
+        +'<div class="acc"><button class="btn" data-a="vender" data-r="'+r+'"'+(s===0||off?' disabled':'')+'>Vendido</button><button class="btn ghost" data-a="pedirV" data-r="'+r+'"'+(off?' disabled':'')+'>Pedir</button></div></div>'
+        +(ab?'<div class="vform"><input class="cli" id="vCli" placeholder="¿Para quién?" autocomplete="off"><input id="vCon" placeholder="Teléfono / piso" autocomplete="off"><input id="vCant" type="number" min="1" value="1" aria-label="Cantidad"><button class="btn" data-a="pedirOK" data-r="'+r+'"'+(off?' disabled':'')+'>Apuntar pedido</button></div>':'')
+        +'</div>';
+    }
+    h+='</div>';
+  }
+  const cli=$('vCli')?.value, con=$('vCon')?.value, cant=$('vCant')?.value;
+  $('vendLista').innerHTML=h;
+  if($('vCli')){ $('vCli').value=cli||''; $('vCon').value=con||''; $('vCant').value=cant||1; }
+}
 function pintarPanel(){
   if(!stock) return; const R=calc(), ok=conectado&&!!G;
   const set=(id,v)=>$(id).textContent=v;
@@ -459,6 +506,11 @@ document.addEventListener('click',async ev=>{
   if(a==='muestra'){ const v=!prod(ref)?.muestra;
     await guardar((v?'Con muestra: ':'Sin muestra: ')+nom(ref),(s)=>{ pS(s,ref).muestra=v; return true; }); return; }
   if(a==='encargar'){ setTab('enc'); $('eProd').value=ref; $('eCant').value=1; $('eCli').focus(); return; }
+  if(a==='pedirV'){ vendAbierto=vendAbierto===ref?null:ref; pintarVend(); $('vCli')?.focus(); return; }
+  if(a==='pedirOK'){ const cant=Math.max(1,parseInt($('vCant').value,10)||1);
+    const en={id:uid(),fecha:hoy(),ref,cant,cliente:$('vCli').value.trim(),contacto:$('vCon').value.trim(),nota:'Pedido desde modo vender',pagado:false,estado:'pendiente'};
+    if(await guardar('Nuevo encargo: '+nom(ref)+' × '+cant+(en.cliente?' ('+en.cliente+')':''),(s,g)=>{ g.encargos.push(clon(en)); return false; })){ vendAbierto=null; pintarVend(); toast('Pedido apuntado: '+nom(ref)); }
+    return; }
   if(b.dataset.enc){ const e0=G.encargos.find(x=>x.id===id); if(!e0) return; const k=b.dataset.enc, f=hoy(), vid=uid();
     if(k==='entregar') await guardar('Encargo entregado: '+nom(e0.ref)+' × '+e0.cant+(e0.cliente?' ('+e0.cliente+')':''),(s,g)=>{
       const e=g.encargos.find(x=>x.id===id); if(!e||e.estado!=='pendiente') fallo('Ese encargo ya no está pendiente');
@@ -515,7 +567,7 @@ $('fCost').addEventListener('submit',async e=>{ e.preventDefault(); const c={}; 
 
 /* --- configuración --- */
 $('cfgForm').addEventListener('submit',async e=>{ e.preventDefault();
-  cfg={owner:$('cOwner').value.trim(),repo:$('cRepo').value.trim(),token:$('cToken').value.trim(),clave:$('cClave').value};
+  cfg={owner:$('cOwner').value.trim(),repo:$('cRepo').value.trim(),token:$('cToken').value.trim(),clave:$('cClave').value,modo:cfg.modo||'completo'};
   guardarCfg(); $('cfgMsg').textContent='Conectando…'; await conectar(); $('cfgMsg').textContent=conectado?'Conectado.':$('estado').textContent; if(conectado) setTab('panel'); });
 $('olvidar').onclick=()=>{ try{ localStorage.removeItem(CFG_KEY); }catch(e){} cfg={}; leerCfg(); rellenarForm(); conectado=false; G=null; pintarTodo(); $('cfgMsg').textContent='Borrado de este dispositivo.'; };
 
@@ -530,10 +582,34 @@ $('impFile').addEventListener('change',async ev=>{ const f=ev.target.files[0]; e
 $('impOk').onclick=async()=>{ if(!importado) return; const d=normalizar(clon(importado));
   if(await guardar('Datos importados desde copia',(s,g)=>{ for(const k of Object.keys(g)) delete g[k]; Object.assign(g,clon(d)); return false; })){ importado=null; $('impOk').hidden=true; $('impMsg').textContent='Datos importados.'; } };
 
+/* --- configurar otro dispositivo con un enlace / QR (los datos van tras #, nunca llegan a ningún servidor) --- */
+const b64url=s=>b64e(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64url=s=>b64d(s.replace(/-/g,'+').replace(/_/g,'/'));
+let qrModo='vendedor';
+function enlaceConfig(){ return location.origin+location.pathname+'#cfg='+b64url(JSON.stringify({o:cfg.owner,r:cfg.repo,t:cfg.token,k:cfg.clave,m:qrModo})); }
+function leerEnlaceConfig(){
+  const m=/^#cfg=([A-Za-z0-9_-]+)$/.exec(location.hash); if(!m) return false;
+  history.replaceState(null,'',location.pathname+location.search);
+  try{ const d=JSON.parse(unb64url(m[1])); if(!d.t||!d.k) return false;
+    cfg={owner:d.o||cfg.owner,repo:d.r||cfg.repo,token:d.t,clave:d.k,modo:d.m==='vendedor'?'vendedor':'completo'}; guardarCfg(); return true; }catch(e){ return false; }
+}
+$('qrVer').onclick=$('qrVer2').onclick=(ev)=>{
+  if(!cfg.token||!cfg.clave||!conectado) return toast('Primero conecta este dispositivo');
+  qrModo=ev.currentTarget.dataset.modo; $('qrVer2').hidden=true;
+  $('qrMsg').textContent=(qrModo==='vendedor'?'QR «solo vender». ':'QR «gestión completa». ')+'Incluye el token y la clave: no lo compartas en grupos ni lo dejes a la vista.';
+  const box=$('qr');
+  if(typeof qrcode==='function'){ const q=qrcode(0,'M'); q.addData(enlaceConfig()); q.make(); box.innerHTML=q.createSvgTag({cellSize:5,margin:2}); }
+  else box.innerHTML='<p class="small" style="color:#333">No se pudo generar el QR. Usa «Copiar enlace» y envíalo por privado.</p>';
+  box.hidden=false; $('qrCopiar').hidden=false; $('qrOcultar').hidden=false; $('qrVer').hidden=true;
+};
+$('qrOcultar').onclick=()=>{ $('qr').hidden=true; $('qr').innerHTML=''; $('qrCopiar').hidden=true; $('qrOcultar').hidden=true; $('qrVer').hidden=false; $('qrVer2').hidden=false; };
+$('qrCopiar').onclick=async()=>{ try{ await navigator.clipboard.writeText(enlaceConfig()); toast('Enlace copiado. Envíalo por privado y bórralo después.'); }catch(e){ toast('No se pudo copiar'); } };
+
 /* ========== pestañas y arranque ========== */
-function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg']){ $('v-'+k).hidden=(k!==t); $('tab-'+k).setAttribute('aria-selected',String(k===t)); } }
-leerCfg(); rellenarForm(); $('pFec').value=hoy();
-conectar().then(()=>{ addLinea(); if(!cfg.token) setTab('cfg'); });
+function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
+leerCfg(); const recienConfigurado=leerEnlaceConfig(); rellenarForm(); $('pFec').value=hoy();
+if(cfg.modo==='vendedor'){ document.body.classList.add('vendedor'); document.querySelector('.eyebrow').textContent='Venta solidaria · 4.º ESO'; setTab('vend'); }
+conectar().then(()=>{ addLinea(); if(recienConfigurado&&conectado) toast('Listo. Ya puedes apuntar ventas y pedidos.'); if(!cfg.token) setTab('cfg'); });
 </script>
 </body>
 </html>
