@@ -9,9 +9,10 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
 |---|---|
 | `index.html` | **Catálogo público** para vecinos y clientes: qué hay disponible, qué se puede encargar, precios y botón *Pedir* por WhatsApp. |
 | `catalogo.html` | Hoja **A4 imprimible** (completo B/N, completo color o solo stock) generada con el stock del momento. Botón *Imprimir / guardar PDF*. |
-| `admin.html` | **Gestión** (solo familia): vender, corregir stock, apuntar encargos, marcar muestras, historial y deshacer. |
+| `admin.html` | **Gestión** (solo familia): panel económico, stock, ventas, encargos con cliente, pedidos al proveedor, costes y copias de seguridad. |
 | `data/stock.json` | Stock visible: productos, precios, unidades y muestras. Es lo que lee la página pública. |
-| `data/ventas.enc.json` | Ventas, encargos e historial **cifrados** (AES-GCM). Se crea solo al apuntar la primera venta. |
+| `data/ventas.enc.json` | Gestión **cifrada** (AES-GCM): ventas, encargos, pedidos, costes e historial. Se crea al guardar por primera vez. |
+| `privado/` | No se sube a GitHub (`.gitignore`). Contiene `gestion-inicial-2026-11-13.json` para importar los datos de partida. |
 | `assets/`, `img/` | Estilos, lógica compartida e imágenes de producto. |
 
 ## Puesta en marcha (una sola vez)
@@ -27,21 +28,32 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
 4. Abrir `…/venta-solidaria-4eso/admin.html` → pestaña **Ajustes** → pegar usuario, repo, token y una **clave de ventas**
    (una frase que solo sepa la familia; la misma en todos los dispositivos). Repetir en cada móvil u ordenador.
 
-## Uso diario
+5. **Cargar los datos de partida** (una vez): en `admin.html` → Ajustes → *Importar copia…* → elegir
+   `privado/gestion-inicial-2026-11-13.json` → *Confirmar*. Incluye el pedido inicial (recibido), el segundo
+   pedido (pendiente), las 8 ventas hasta el 13/11 y los costes (8 € perfume, 6,50 € micado).
 
-- **Vender 1**: resta una unidad del stock y suma una venta.
-- **Stock − / +**: corrige unidades (reposición, error de recuento).
-- **Encargos − / +**: pedidos de productos agotados o bajo pedido; cuentan en lo recaudado.
-- **Muestra**: indica si hay probador para oler.
-- **Historial → Deshacer**: anula el último movimiento.
+## Uso diario (admin.html)
+
+- **Panel**: ingresos, beneficio obtenido, invertido y % recuperado, saldo de caja, stock, encargos, pedidos por llegar
+  y beneficio previsto; tablas por categoría y por producto (avisa con ≠ si el stock no cuadra).
+- **Stock**: *Vender 1* (descuenta y apunta la venta), *Encargo* (abre el formulario con el producto),
+  *Stock − / +* solo para corregir recuentos, *Muestra*.
+- **Encargos**: cliente, contacto, nota y si está pagado. *Entregar* lo convierte en venta y descuenta stock;
+  *Cancelar* / *Reabrir*. Indica qué hay que pedir para cubrir los encargos y prepara el pedido.
+- **Pedidos**: pedidos al proveedor con su coste. *Marcar recibido* suma las unidades al stock (y a la web pública).
+- **Ventas**: lista con importe y beneficio; *Anular* devuelve las unidades al stock.
+- **Ajustes**: conexión, costes por unidad, exportar / importar copia y actividad reciente.
+
+Los botones que borran o deshacen piden una segunda pulsación para confirmar.
 
 Cada cambio es un commit (`Actualiza stock` / `Actualiza registro`). La página pública se actualiza en 1–2 minutos.
 
 ## Qué es público y qué no
 
 El repositorio es público: cualquiera puede ver `data/stock.json` (lo mismo que muestra el catálogo).
-Las ventas, encargos, importes e historial van en `data/ventas.enc.json`, cifrados con la clave de ventas:
-sin la clave no se pueden leer. **Si se pierde la clave, ese registro no se puede recuperar** (el stock no se ve afectado).
+Ventas, encargos (con nombres de clientes), pedidos, costes e historial van en `data/ventas.enc.json`, cifrados con la
+clave de gestión: sin la clave no se pueden leer. **Si se pierde la clave, ese registro no se puede recuperar**:
+exporta una copia de vez en cuando (Ajustes → Exportar) y guárdala en `privado/` o en tu Drive.
 El token y la clave se guardan solo en el navegador de cada dispositivo, nunca en el repositorio.
 
 ## Cambiar productos o precios
