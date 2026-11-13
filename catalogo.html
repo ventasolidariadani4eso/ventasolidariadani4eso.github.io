@@ -25,6 +25,7 @@
   <a class="chip" href="./">← Volver</a>
   <button class="chip" data-m="bn">Completo B/N</button>
   <button class="chip" data-m="color">Completo color</button>
+  <button class="chip" data-m="existencias">Con existencias (B/N)</button>
   <button class="chip" data-m="stock">Solo en stock (B/N)</button>
   <button class="btn dark" id="imprimir">Imprimir / guardar PDF</button>
 </div>
@@ -33,7 +34,7 @@
 <script>
 const st=document.createElement('style'); st.textContent=VS.CAT_CSS; document.head.appendChild(st);
 let datos=null, modo=new URLSearchParams(location.search).get('modo')||'bn';
-if(!['bn','color','stock'].includes(modo)) modo='bn';
+if(!['bn','color','existencias','stock'].includes(modo)) modo='bn';
 function pintar(){
   document.querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===modo)));
   if(datos) document.getElementById('hoja').innerHTML=VS.catalogoA4(datos,modo);

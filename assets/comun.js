@@ -45,6 +45,8 @@
 .page .sub{font-size:12px;color:#444;margin-left:8px;font-weight:400;font-family:'Jost',sans-serif;letter-spacing:.06em;text-transform:uppercase}
 .page .price{font-family:'Bodoni Moda',Georgia,serif;font-weight:700;font-size:26px}
 .page .row{display:grid;grid-template-columns:34px minmax(0,1fr) 18px 90px;column-gap:8px;align-items:center;min-height:26px;padding:2px 0;border-bottom:1px solid var(--rule)}
+.page.sin-stock .row{grid-template-columns:34px minmax(0,1fr) 20px}
+.page.sin-stock .drop{width:18px;height:18px;justify-self:end}
 .page .ref{font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;color:var(--c)}
 .page .nm{font-size:14px;line-height:1.25;color:inherit}
 .page .br{color:var(--brc);font-size:12.5px}
@@ -63,14 +65,14 @@
 .page *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 `;
 
-  function seccionA4(datos, c, color, solo) {
+  function seccionA4(datos, c, color, solo, sinStock) {
     let items = ordenados(datos, c.id);
     if (solo) items = items.filter(p => n(p.stock) > 0);
     if (!items.length) return '';
     const rows = items.map(p => {
       const s = n(p.stock);
-      const pill = solo ? '<span class="pill ya">' + (s === 1 ? '1 unidad' : s + ' unidades') + '</span>'
-        : (s > 0 ? '<span class="pill ya">En stock · ' + s + '</span>' : '<span class="pill enc">Encargo</span>');
+      const pill = sinStock ? '' : (solo ? '<span class="pill ya">' + (s === 1 ? '1 unidad' : s + ' unidades') + '</span>'
+        : (s > 0 ? '<span class="pill ya">En stock · ' + s + '</span>' : '<span class="pill enc">Encargo</span>'));
       return '<div class="row"><span class="ref">' + esc(p.ref) + '</span><span class="nm">' + esc(p.nombre)
         + (p.marca ? ' <span class="br">(' + esc(p.marca) + ')</span>' : '') + '</span>'
         + (p.muestra ? DROP : '<span></span>') + pill + '</div>';
@@ -93,14 +95,19 @@
   }
 
   function catalogoA4(datos, modo) {
-    const color = modo === 'color', solo = modo === 'stock';
+    const color = modo === 'color', solo = modo === 'stock', conExistencias = modo === 'existencias';
+    const sinStock = !solo && !conExistencias;
     const C = Object.fromEntries(datos.categorias.map(c => [c.id, c]));
-    const sec = id => C[id] ? seccionA4(datos, C[id], color, solo) : '';
-    const leg = solo
-      ? '<span><span class="pill ya">1 unidad</span> unidades que quedan</span><span>' + DROP + ' hay muestra para oler</span>'
-      : '<span><span class="pill ya">En stock · 1</span> unidades que quedan</span><span><span class="pill enc">Encargo</span> se pide y se entrega después</span><span>' + DROP + ' hay muestra para oler</span>';
-    const sub = (solo ? 'Disponibles para entrega inmediata · existencias a ' : 'Existencias actualizadas a ') + fecha(datos.actualizado);
-    return '<div class="page' + (color ? ' color' : '') + (solo ? ' stock' : '') + '">'
+    const sec = id => C[id] ? seccionA4(datos, C[id], color, solo, sinStock) : '';
+    const leg = sinStock
+      ? '<span>' + DROP + ' hay muestra para oler</span>'
+      : (solo
+        ? '<span><span class="pill ya">1 unidad</span> unidades que quedan</span><span>' + DROP + ' hay muestra para oler</span>'
+        : '<span><span class="pill ya">En stock · 1</span> unidades que quedan</span><span><span class="pill enc">Encargo</span> se pide y se entrega después</span><span>' + DROP + ' hay muestra para oler</span>');
+    const sub = sinStock
+      ? 'Catálogo de productos'
+      : ((solo ? 'Disponibles para entrega inmediata · existencias a ' : 'Existencias actualizadas a ') + fecha(datos.actualizado));
+    return '<div class="page' + (color ? ' color' : '') + (solo ? ' stock' : '') + (sinStock ? ' sin-stock' : '') + '">'
       + '<header class="hd"><p class="ey">' + esc(datos.titulo || '') + '</p><h1>Colonias <span>&amp;</span> Micados</h1><p class="fe">' + sub + '</p></header>'
       + '<div class="lg">' + leg + '</div>'
       + '<main class="mn"><div class="col">' + sec('masc') + sec('micado') + '</div><div class="col">' + sec('fem') + sec('nicho') + '</div></main>'
