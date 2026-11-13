@@ -154,9 +154,27 @@ body.vendedor nav.tabs{display:none}
 
   <!-- MODO VENDEDOR (pantalla sencilla) -->
   <section id="v-vend" hidden>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <p class="note">Pulsa <strong>Vendido</strong> cuando entregues uno, o <strong>Pedir</strong> si alguien quiere uno que no llevas o que está agotado.</p>
-      <div id="vendLista"></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <form class="panel" id="fVend" autocomplete="off">
+        <h2>Apuntar un pedido</h2>
+        <p class="note">Si alguien quiere uno que no llevas o que está agotado.</p>
+        <div class="grid2">
+          <div class="field"><label for="vProd">Producto</label><select id="vProd" required></select></div>
+          <div class="field"><label for="vCant">Cantidad</label><input id="vCant" type="number" min="1" value="1" required></div>
+          <div class="field"><label for="vCli">¿Para quién? (obligatorio)</label><input id="vCli" required placeholder="Nombre"></div>
+          <div class="field"><label for="vCon">Teléfono o piso</label><input id="vCon" placeholder="Opcional"></div>
+        </div>
+        <div class="bar"><button class="btn" type="submit">Apuntar pedido</button></div>
+      </form>
+      <div>
+        <h3>Lo que llevo para vender</h3>
+        <p class="note">Pulsa <strong>Vendido</strong> cuando entregues uno.</p>
+        <div id="vendLista"></div>
+      </div>
+      <div>
+        <h3>Pedidos apuntados</h3>
+        <div class="cards" id="vendPed"></div>
+      </div>
     </div>
   </section>
 
@@ -272,23 +290,25 @@ function pintarTodo(){ pintarPanel(); pintarLista(); pintarEnc(); pintarPed(); p
 let vendAbierto=null;
 function pintarVend(){
   if(cfg.modo!=='vendedor'||!stock) return;
-  const R=calc(), off=!conectado||ocupado; let h='';
+  const off=!conectado||ocupado; let h='';
+  // Solo lo que hay en stock
   for(const c of stock.categorias){
-    const items=VS.ordenados(stock,c.id); if(!items.length) continue;
+    const items=VS.ordenados(stock,c.id).filter(p=>n(p.stock)>0); if(!items.length) continue;
     h+='<div class="group"><div class="ghead"><h2>'+esc(c.nombre)+'</h2><span class="p">'+esc(c.precio)+' €</span></div>';
     for(const p of items){
-      const s=n(p.stock), r=esc(p.ref), ab=vendAbierto===p.ref, x=R.porRef[p.ref];
+      const s=n(p.stock), r=esc(p.ref);
       h+='<div class="vrow"><div class="top"><div class="info"><div class="line1"><span class="ref">'+r+'</span><span class="nm">'+esc(p.nombre)+'</span>'+(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div>'
-        +'<div class="meta">'+(s>0?'<span class="badge on">Quedan '+s+'</span>':'<span class="badge off">Agotado</span>')+(x&&x.encP?'<span>Pedidos: '+x.encP+'</span>':'')+'</div></div>'
-        +'<div class="acc"><button class="btn" data-a="vender" data-r="'+r+'"'+(s===0||off?' disabled':'')+'>Vendido</button><button class="btn ghost" data-a="pedirV" data-r="'+r+'"'+(off?' disabled':'')+'>Pedir</button></div></div>'
-        +(ab?'<div class="vform"><input class="cli" id="vCli" placeholder="¿Para quién?" autocomplete="off"><input id="vCon" placeholder="Teléfono / piso" autocomplete="off"><input id="vCant" type="number" min="1" value="1" aria-label="Cantidad"><button class="btn" data-a="pedirOK" data-r="'+r+'"'+(off?' disabled':'')+'>Apuntar pedido</button></div>':'')
-        +'</div>';
+        +'<div class="meta"><span class="badge on">Quedan '+s+'</span></div></div>'
+        +'<div class="acc"><button class="btn" data-a="vender" data-r="'+r+'"'+(off?' disabled':'')+'>Vendido</button></div></div></div>';
     }
     h+='</div>';
   }
-  const cli=$('vCli')?.value, con=$('vCon')?.value, cant=$('vCant')?.value;
-  $('vendLista').innerHTML=h;
-  if($('vCli')){ $('vCli').value=cli||''; $('vCon').value=con||''; $('vCant').value=cant||1; }
+  $('vendLista').innerHTML=h||'<div class="empty">No queda nada en stock. Apunta los pedidos arriba.</div>';
+  // Selector de producto (todos) conservando la elección
+  const sel=$('vProd').value; $('vProd').innerHTML=opcionesProd(sel);
+  // Pedidos pendientes con su destinatario
+  const pend=(G?.encargos||[]).filter(e=>e.estado==='pendiente').slice().reverse();
+  $('vendPed').innerHTML=pend.length?pend.map(e=>'<div class="card"><div class="top"><span class="tt">'+esc(nom(e.ref))+' × '+n(e.cant)+'</span><span class="small">'+fmtF(e.fecha)+'</span></div><div class="small">Para: <strong>'+esc(e.cliente||'—')+'</strong>'+(e.contacto?' · '+esc(e.contacto):'')+'</div></div>').join(''):'<p class="small">No hay pedidos pendientes.</p>';
 }
 function pintarPanel(){
   if(!stock) return; const R=calc(), ok=conectado&&!!G;
@@ -511,11 +531,6 @@ document.addEventListener('click',async ev=>{
   if(a==='muestra'){ const v=!prod(ref)?.muestra;
     await guardar((v?'Con muestra: ':'Sin muestra: ')+nom(ref),(s)=>{ pS(s,ref).muestra=v; return true; }); return; }
   if(a==='encargar'){ setTab('enc'); $('eProd').value=ref; $('eCant').value=1; $('eCli').focus(); return; }
-  if(a==='pedirV'){ vendAbierto=vendAbierto===ref?null:ref; pintarVend(); $('vCli')?.focus(); return; }
-  if(a==='pedirOK'){ const cant=Math.max(1,parseInt($('vCant').value,10)||1);
-    const en={id:uid(),fecha:hoy(),ref,cant,cliente:$('vCli').value.trim(),contacto:$('vCon').value.trim(),nota:'Pedido desde modo vender',pagado:false,estado:'pendiente'};
-    if(await guardar('Nuevo encargo: '+nom(ref)+' × '+cant+(en.cliente?' ('+en.cliente+')':''),(s,g)=>{ g.encargos.push(clon(en)); return false; })){ vendAbierto=null; pintarVend(); toast('Pedido apuntado: '+nom(ref)); }
-    return; }
   if(b.dataset.enc){ const e0=G.encargos.find(x=>x.id===id); if(!e0) return; const k=b.dataset.enc, f=hoy(), vid=uid();
     if(k==='entregar') await guardar('Encargo entregado: '+nom(e0.ref)+' × '+e0.cant+(e0.cliente?' ('+e0.cliente+')':''),(s,g)=>{
       const e=g.encargos.find(x=>x.id===id); if(!e||e.estado!=='pendiente') fallo('Ese encargo ya no está pendiente');
@@ -551,6 +566,14 @@ document.addEventListener('click',async ev=>{
 $('fEnc').addEventListener('submit',async e=>{ e.preventDefault(); if(!conectado) return toast('Conecta primero en Ajustes');
   const ref=$('eProd').value, cant=Math.max(1,parseInt($('eCant').value,10)||1), en={id:uid(),fecha:hoy(),ref,cant,cliente:$('eCli').value.trim(),contacto:$('eCon').value.trim(),nota:$('eNota').value.trim(),pagado:$('ePag').checked,estado:'pendiente'};
   if(await guardar('Nuevo encargo: '+nom(ref)+' × '+cant+(en.cliente?' ('+en.cliente+')':''),(s,g)=>{ g.encargos.push(clon(en)); return false; })){ $('fEnc').reset(); $('eProd').value=ref; toast('Encargo apuntado'); } });
+
+/* --- pedido desde el modo vendedor (destinatario obligatorio) --- */
+$('fVend').addEventListener('submit',async e=>{ e.preventDefault(); if(!conectado) return toast('Sin conexión');
+  const ref=$('vProd').value, cant=Math.max(1,parseInt($('vCant').value,10)||1), cli=$('vCli').value.trim();
+  if(!cli){ $('vCli').focus(); return toast('Escribe para quién es'); }
+  const en={id:uid(),fecha:hoy(),ref,cant,cliente:cli,contacto:$('vCon').value.trim(),nota:'Apuntado por el vendedor',pagado:false,estado:'pendiente'};
+  if(await guardar('Nuevo encargo: '+nom(ref)+' × '+cant+' ('+cli+')',(s,g)=>{ g.encargos.push(clon(en)); return false; })){
+    $('vCli').value=''; $('vCon').value=''; $('vCant').value=1; toast('Pedido apuntado para '+cli); } });
 
 /* --- formulario de pedido --- */
 function addLinea(ref,cant){ const d=document.createElement('div'); d.className='line';
