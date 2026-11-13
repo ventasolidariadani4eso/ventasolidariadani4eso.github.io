@@ -443,7 +443,12 @@ async function recargarG(){ const f=await leer(GEST); if(!f){ G=gVacio(); gSha=n
 
 /* ========== conexión ========== */
 function leerCfg(){ try{ cfg=JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch(e){ cfg={}; }
-  if(location.hostname.endsWith('.github.io')){ cfg.owner=cfg.owner||location.hostname.split('.')[0]; cfg.repo=cfg.repo||location.pathname.split('/').filter(Boolean)[0]||''; } }
+  // En GitHub Pages el propio dominio indica el repo: <owner>.github.io/<repo>/ o, si es la web principal, <owner>.github.io (repo "<owner>.github.io").
+  if(location.hostname.endsWith('.github.io')){
+    const seg=location.pathname.split('/').filter(Boolean)[0]||'';
+    cfg.owner=location.hostname.split('.')[0];
+    cfg.repo=(seg&&!/\.html?$/i.test(seg))?seg:location.hostname;
+  } }
 function guardarCfg(){ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} }
 function rellenarForm(){ $('cOwner').value=cfg.owner||''; $('cRepo').value=cfg.repo||''; $('cToken').value=cfg.token||''; $('cClave').value=cfg.clave||''; }
 async function conectar(){

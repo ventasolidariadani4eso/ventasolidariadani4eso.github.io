@@ -32,6 +32,13 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
    `privado/gestion-inicial-2026-11-13.json` → *Confirmar*. Incluye el pedido inicial (recibido), el segundo
    pedido (pendiente), las 8 ventas hasta el 13/11 y los costes (8 € perfume, 6,50 € micado).
 
+6. **Otros móviles** (familia o vendedor): en tu `admin.html` → Ajustes → *Configurar otro móvil* →
+   **QR solo vender** (pantalla sencilla con *Vendido* y *Pedir*) o **QR gestión completa**. Se escanea con la cámara
+   y el móvil queda configurado sin escribir nada ni tener cuenta de GitHub. El QR lleva el token y la clave: enséñalo
+   solo en persona.
+
+> Si vas a continuar el proyecto con otra IA o persona, lee primero [`AGENTS.md`](AGENTS.md).
+
 ## Uso diario (admin.html)
 
 - **Panel**: ingresos, beneficio obtenido, invertido y % recuperado, saldo de caja, stock, encargos, pedidos por llegar
