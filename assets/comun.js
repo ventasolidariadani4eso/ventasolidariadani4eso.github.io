@@ -60,8 +60,8 @@
 .page.stock .nm{font-size:15px}.page.stock .pill{width:96px;padding:3px 0}
 .page.stock .sec h2{font-size:24px}.page.stock .col{gap:24px}
 .page .ft{display:flex;justify-content:center;align-items:center;gap:10px;background:var(--acc);color:#fff;border-radius:6px;padding:6px 16px;flex-shrink:0;position:relative;z-index:1}
-.page .ft .a{font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
-.page .ft .b{font-size:15px;font-weight:600;letter-spacing:.03em}
+.page .ft .a{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;opacity:.95}
+.page .ft .b{font-size:14.5px;font-weight:600;letter-spacing:.02em}
 .page *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 `;
 
@@ -107,11 +107,12 @@
     const sub = sinStock
       ? 'Catálogo de productos'
       : ((solo ? 'Disponibles para entrega inmediata · existencias a ' : 'Existencias actualizadas a ') + fecha(datos.actualizado));
+    const web = datos.web || (typeof location !== 'undefined' && location.hostname && !['localhost','127.0.0.1'].includes(location.hostname) ? (location.host + (location.pathname.startsWith('/venta-solidaria-4eso') ? '/venta-solidaria-4eso' : '')) : 'ventasolidariadani4eso.github.io');
     return '<div class="page' + (color ? ' color' : '') + (solo ? ' stock' : '') + (sinStock ? ' sin-stock' : '') + '">'
       + '<header class="hd"><p class="ey">' + esc(datos.titulo || '') + '</p><h1>Colonias <span>&amp;</span> Micados</h1><p class="fe">' + sub + '</p></header>'
       + '<div class="lg">' + leg + '</div>'
       + '<main class="mn"><div class="col">' + sec('masc') + sec('micado') + '</div><div class="col">' + sec('fem') + sec('nicho') + '</div></main>'
-      + '<footer class="ft"><span class="a">Contacto y pedidos</span><span class="b">' + esc(datos.telefono || '') + '</span></footer></div>';
+      + '<footer class="ft"><span class="a">Contacto y pedidos</span><span class="b">' + esc(datos.telefono || '') + '</span><span class="sep" style="opacity:.6;padding:0 4px">·</span><span class="a">Web</span><span class="b">' + esc(web) + '</span></footer></div>';
   }
 
   window.VS = { esc, n, DROP, fecha, hoyISO, cargarStock, ordenados, telLimpio, CAT_CSS, catalogoA4 };
