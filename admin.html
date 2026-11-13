@@ -39,10 +39,19 @@ select,.field input,.field textarea{font:inherit;padding:9px 10px;border:1px sol
 details>summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
 .small{font-size:13px;color:var(--muted)}
 body.vendedor nav.tabs{display:none}
-.vrow{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
-.vrow .top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-.vrow .acc{display:flex;gap:8px}
-.vrow .acc .btn{min-height:48px;padding:0 18px;font-size:16px}
+.vrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.vrow .info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.vrow .line1{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.vrow .ref{font-weight:700;color:var(--accent);font-size:14px}
+.vrow .nm{font-weight:600;font-size:15px}
+.vrow .br{color:var(--muted);font-size:13px}
+.vrow .acc{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.vrow .acc .badge{white-space:nowrap;font-size:12px;padding:5px 9px}
+.vrow .acc .btn{min-height:44px;padding:0 16px;font-size:15px;white-space:nowrap}
+@media (max-width:360px){
+  .vrow .acc{flex-direction:column;align-items:flex-end;gap:4px}
+  .vrow .acc .btn{min-height:38px;padding:0 12px;font-size:14px}
+}
 .vform{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 80px;gap:8px;background:var(--chip);padding:10px;border-radius:10px}
 .vform input{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);min-height:44px;width:100%}
 .vform .btn{grid-column:1/-1;justify-content:center}
@@ -154,7 +163,12 @@ body.vendedor nav.tabs{display:none}
 
   <!-- MODO VENDEDOR (pantalla sencilla) -->
   <section id="v-vend" hidden>
-    <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div>
+        <h2 style="margin:0 0 4px">Lo que llevo para vender</h2>
+        <p class="note" style="margin:0 0 12px">Pulsa <strong>Vendido</strong> cuando entregues uno.</p>
+        <div id="vendLista"></div>
+      </div>
       <form class="panel" id="fVend" autocomplete="off">
         <h2>Apuntar un pedido</h2>
         <p class="note">Si alguien quiere uno que no llevas o que está agotado.</p>
@@ -166,11 +180,6 @@ body.vendedor nav.tabs{display:none}
         </div>
         <div class="bar"><button class="btn" type="submit">Apuntar pedido</button></div>
       </form>
-      <div>
-        <h3>Lo que llevo para vender</h3>
-        <p class="note">Pulsa <strong>Vendido</strong> cuando entregues uno.</p>
-        <div id="vendLista"></div>
-      </div>
       <div>
         <h3>Pedidos apuntados</h3>
         <div class="cards" id="vendPed"></div>
@@ -297,13 +306,14 @@ function pintarVend(){
     h+='<div class="group"><div class="ghead"><h2>'+esc(c.nombre)+'</h2><span class="p">'+esc(c.precio)+' €</span></div>';
     for(const p of items){
       const s=n(p.stock), r=esc(p.ref);
-      h+='<div class="vrow"><div class="top"><div class="info"><div class="line1"><span class="ref">'+r+'</span><span class="nm">'+esc(p.nombre)+'</span>'+(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div>'
-        +'<div class="meta"><span class="badge on">Quedan '+s+'</span></div></div>'
-        +'<div class="acc"><button class="btn" data-a="vender" data-r="'+r+'"'+(off?' disabled':'')+'>Vendido</button></div></div></div>';
+      h+='<div class="vrow">'
+        +'<div class="info"><div class="line1"><span class="ref">'+r+'</span><span class="nm">'+esc(p.nombre)+'</span>'+(p.marca?'<span class="br">'+esc(p.marca)+'</span>':'')+'</div></div>'
+        +'<div class="acc"><span class="badge on">Quedan '+s+'</span><button class="btn" data-a="vender" data-r="'+r+'"'+(off?' disabled':'')+'>Vendido</button></div>'
+        +'</div>';
     }
     h+='</div>';
   }
-  $('vendLista').innerHTML=h||'<div class="empty">No queda nada en stock. Apunta los pedidos arriba.</div>';
+  $('vendLista').innerHTML=h||'<div class="empty">No queda nada en stock. Apunta los pedidos abajo.</div>';
   // Selector de producto (todos) conservando la elección
   const sel=$('vProd').value; $('vProd').innerHTML=opcionesProd(sel);
   // Pedidos pendientes con su destinatario
