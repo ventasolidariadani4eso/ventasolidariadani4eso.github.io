@@ -19,13 +19,13 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
 
 1. **Crear el repositorio** en GitHub (público) con el nombre `venta-solidaria-4eso` y subir esta carpeta (push).
 2. **Activar Pages**: *Settings → Pages → Build and deployment → Deploy from a branch → `main` / `(root)` → Save*.
-   En 1–2 minutos estará en `https://guillermolareo-art.github.io/venta-solidaria-4eso/`.
+   En 1–2 minutos estará en `https://ventasolidariadani4eso.github.io/`.
 3. **Crear un token** para apuntar ventas desde la web:
    *GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token*
-   - Repository access: **Only select repositories** → `venta-solidaria-4eso`
+   - Repository access: **Only select repositories** → `ventasolidariadani4eso.github.io`
    - Permissions → Repository permissions → **Contents: Read and write**
    - Caducidad: hasta que acabe la venta.
-4. Abrir `…/venta-solidaria-4eso/admin.html` → pestaña **Ajustes** → pegar usuario, repo, token y una **clave de ventas**
+4. Abrir `https://ventasolidariadani4eso.github.io/admin.html` → pestaña **Ajustes** → pegar usuario (`ventasolidariadani4eso`), repo (`ventasolidariadani4eso.github.io`), token y una **clave de ventas**
    (una frase que solo sepa la familia; la misma en todos los dispositivos). Repetir en cada móvil u ordenador.
 
 5. **Cargar los datos de partida** (una vez): en `admin.html` → Ajustes → *Importar copia…* → elegir

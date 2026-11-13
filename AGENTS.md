@@ -10,9 +10,9 @@ Venta solidaria de colonias de equivalencia y ambientadores micado (proveedor **
 gestiona para pagar la excursión de **4.º ESO del IES Ribeira do Louro**. Vende puerta a puerta el alumno (Dani).
 Precios de venta: perfumes 15 €, micados 12 €. Costes: perfume 8 €, micado 6,50 €.
 
-- Web pública: `https://guillermolareo-art.github.io/venta-solidaria-4eso/` (enlace corto: `is.gd/VentaSolidariaDani4ESO`)
-- Gestión: `…/admin.html` (requiere token + clave; ver más abajo)
-- Repo: `guillermolareo-art/venta-solidaria-4eso` (público). Rama `main`, Pages desde la raíz.
+- Web pública: `https://ventasolidariadani4eso.github.io/` (enlace corto: `is.gd/VentaSolidariaDani4ESO`)
+- Gestión: `https://ventasolidariadani4eso.github.io/admin.html` (requiere token + clave; ver más abajo)
+- Repo: `ventasolidariadani4eso/ventasolidariadani4eso.github.io` (público). Rama `main`, Pages desde la raíz.
 
 ## Archivos
 
@@ -88,9 +88,13 @@ Precio y coste se guardan en cada venta (si cambian después, las ventas antigua
 
 ## Estado a 13/11/2026
 
+- **Despliegue y URLs**: El repositorio y GitHub Pages están en `ventasolidariadani4eso/ventasolidariadani4eso.github.io` (URL pública directa: `https://ventasolidariadani4eso.github.io/`).
 - Pedido inicial (23 uds, 167,50 €) **recibido**. Segundo pedido (19 uds, 134 €) **pendiente de recibir**:
   al llegar, *Pedidos → Marcar recibido* (stock pasa de 15 a 34).
 - 8 unidades vendidas antes de la app (108 €, beneficio 50 €), cargadas desde `privado/gestion-inicial-2026-11-13.json`.
 - Productos nuevos del segundo pedido: 137 Sauvage Elixir y 246 My Way (confirmar si traen muestra).
-- Ideas descartadas o pendientes: anonimizar la URL con una organización de GitHub (`venta-solidaria-4eso.github.io`)
-  o Netlify; ahora se usa el enlace corto de is.gd.
+- **Ajustes recientes completados**:
+  - **WhatsApp**: Enlace directo con protocolo `whatsapp://send?text=...` para abrir la app instalada sin pasar por la web desvinculada.
+  - **Página pública (`index.html`)**: Perfumes presentados con prefijo "Inspirado en".
+  - **Catálogo imprimible (`catalogo.html` / `assets/comun.js`)**: Modos B/N y Color limpios sin mostrar stock ni "por encargo" (para entregar a clientes); botón "Con existencias (B/N)" para uso interno de Dani; pie de página con teléfono y enlace a la web pública.
+  - **Modo vendedor (`admin.html`)**: "Lo que llevo para vender" arriba del todo; maquetación CSS grid para alinear en móviles el badge "Quedan N" con el botón "Vendido"; sección "Vendido hoy" al final de la página con opción de anular ventas erróneas (doble pulsación de confirmación).
