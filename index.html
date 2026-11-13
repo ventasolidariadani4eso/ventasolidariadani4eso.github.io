@@ -15,9 +15,29 @@
 .pedir{font-size:13px;min-height:38px;padding:0 12px}
 .precio{font-weight:600;font-variant-numeric:tabular-nums}
 .pie{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+/* Foto: banda arriba en móvil; columna lateral fija en pantallas anchas, sin quitar sitio al listado */
+.layout{max-width:1220px;margin:0 auto;padding-block:24px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+.layout>.wrap{padding-block:0;max-width:none;margin:0;min-width:0}
+.foto{margin:0}
+.foto img{display:block;width:100%;border-radius:12px;object-fit:cover}
+.foto .h{aspect-ratio:16/9;max-height:240px;object-position:50% 45%}
+.foto .v{display:none}
+.foto figcaption{font-size:12px;color:var(--muted);margin-top:6px}
+@media (min-width:980px){
+  .layout{grid-template-columns:320px minmax(0,1fr);gap:40px;align-items:start}
+  .foto{position:sticky;top:24px}
+  .foto .h{display:none}
+  .foto .v{display:block;aspect-ratio:4/5;max-height:calc(100vh - 80px)}
+}
 </style>
 </head>
 <body>
+<div class="layout">
+<figure class="foto">
+  <img class="h" src="img/foto_horizontal.webp" alt="Ambientador micado Frutos Rojos y perfumes Les Vents de Grasse 112, 303 y 245" width="1152" height="768">
+  <img class="v" src="img/foto_vertical.webp" alt="Ambientador micado Frutos Rojos con su caja" width="900" height="1125" loading="lazy">
+  <figcaption>Perfumes y micados Les Vents de Grasse</figcaption>
+</figure>
 <div class="wrap">
   <header class="top hero">
     <span class="eyebrow" id="titulo">Venta solidaria · Excursión de 4.º ESO · IES Ribeira do Louro</span>
@@ -42,6 +62,7 @@
     <a class="chip" href="catalogo.html">Ver catálogo para imprimir</a>
     <span class="note">La gotita indica que hay muestra para oler antes de comprar.</span>
   </div>
+</div>
 </div>
 <script src="assets/comun.js"></script>
 <script>
