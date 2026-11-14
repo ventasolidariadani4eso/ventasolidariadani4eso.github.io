@@ -655,7 +655,7 @@ $('fCost').addEventListener('submit',async e=>{ e.preventDefault(); const c={}; 
 $('cfgForm').addEventListener('submit',async e=>{ e.preventDefault();
   cfg={owner:$('cOwner').value.trim(),repo:$('cRepo').value.trim(),token:$('cToken').value.trim(),clave:$('cClave').value,modo:cfg.modo||'completo'};
   guardarCfg(); $('cfgMsg').textContent='Conectando…'; await conectar(); $('cfgMsg').textContent=conectado?'Conectado.':$('estado').textContent; if(conectado) setTab('panel'); });
-$('olvidar').onclick=()=>{ try{ localStorage.removeItem(CFG_KEY); }catch(e){} cfg={}; leerCfg(); rellenarForm(); conectado=false; G=null; pintarTodo(); $('cfgMsg').textContent='Borrado de este dispositivo.'; };
+$('olvidar').onclick=()=>{ try{ localStorage.removeItem(CFG_KEY); localStorage.removeItem(SKIP_KEY); sessionStorage.removeItem(SES_KEY); }catch(e){} cfg={}; leerCfg(); rellenarForm(); conectado=false; G=null; pintarTodo(); $('cfgMsg').textContent='Borrado de este dispositivo.'; };
 
 /* --- copia de seguridad --- */
 $('exportar').onclick=()=>{ if(!G) return toast('Conecta primero');
@@ -702,7 +702,15 @@ async function cifrarCon(pass,o){ const salt=crypto.getRandomValues(new Uint8Arr
 async function descifrarCon(pass,f){ const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b2by(f.iv)},await claveDe(pass,b2by(f.salt)),b2by(f.data)); return JSON.parse(new TextDecoder().decode(pt)); }
 function mostrarLogin(){ document.body.classList.add('login'); setTab('login'); estado('Acceso restringido a administradores.'); setTimeout(()=>$('lPass').focus(),50); }
 $('lManual').onclick=()=>{ document.body.classList.remove('login'); setTab('cfg'); };
+const SES_KEY='vs4eso.ok', SKIP_KEY='vs4eso.sinclave';
+function sesionAbierta(){ try{ return sessionStorage.getItem(SES_KEY)==='1'||localStorage.getItem(SKIP_KEY)==='1'; }catch(e){ return false; } }
+function abrirSesion(){ try{ sessionStorage.setItem(SES_KEY,'1'); if($('lRec').checked) localStorage.setItem(SKIP_KEY,'1'); else localStorage.removeItem(SKIP_KEY); }catch(e){} }
 $('fLogin').addEventListener('submit',async e=>{ e.preventDefault(); const pass=$('lPass').value; if(!pass) return;
+  // Dispositivo ya configurado: se comprueba la contraseña contra la clave guardada
+  if(cfg.token&&cfg.clave){
+    if(pass!==cfg.clave){ $('lMsg').textContent='Contraseña incorrecta.'; $('lPass').select(); return; }
+    abrirSesion(); $('lPass').value=''; $('lMsg').textContent=''; document.body.classList.remove('login');
+    await conectar(); addLinea(); setTab(conectado?'panel':'cfg'); return; }
   $('lMsg').textContent='Comprobando…';
   let f; try{ const r=await fetch(ACCESO+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw r.status; f=await r.json(); }
   catch(_){ $('lMsg').textContent='El acceso con contraseña aún no está activado. Actívalo en Ajustes desde un dispositivo ya configurado.'; return; }
@@ -720,6 +728,7 @@ $('btnAcceso').onclick=async()=>{ if(!conectado) return toast('Primero conecta e
 function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
 leerCfg(); const recienConfigurado=leerEnlaceConfig(); rellenarForm(); $('pFec').value=hoy();
 if(cfg.modo==='vendedor'){ document.body.classList.add('vendedor'); document.querySelector('.eyebrow').textContent='Venta solidaria · 4.º ESO'; setTab('vend'); }
+// Un dispositivo que ya ha accedido se recuerda; solo se pide contraseña si no está configurado
 conectar().then(()=>{ addLinea(); if(recienConfigurado&&conectado) toast('Listo. Ya puedes apuntar ventas y pedidos.'); if(!cfg.token) mostrarLogin(); });
 </script>
 </body>
