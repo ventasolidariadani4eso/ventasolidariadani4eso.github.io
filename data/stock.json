@@ -1,42 +1,298 @@
 {
-  "actualizado": "2026-11-13",
+  "actualizado": "2026-11-14",
   "telefono": "620 589 262",
   "titulo": "Venta solidaria · Excursión de 4.º ESO · IES Ribeira do Louro",
   "categorias": [
-    {"id": "masc",   "nombre": "Masculinas", "sub": "Eau de Parfum 100 ml", "precio": 15, "cls": "sm"},
-    {"id": "fem",    "nombre": "Femeninas",  "sub": "Eau de Parfum 100 ml", "precio": 15, "cls": "sf"},
-    {"id": "nicho",  "nombre": "Nicho",      "sub": "Unisex · EDP 100 ml",  "precio": 15, "cls": "sn"},
-    {"id": "micado", "nombre": "Micados",    "sub": "Ambientador 100 ml",   "precio": 12, "cls": "sk"}
+    {
+      "id": "masc",
+      "nombre": "Masculinas",
+      "sub": "Eau de Parfum 100 ml",
+      "precio": 15,
+      "cls": "sm"
+    },
+    {
+      "id": "fem",
+      "nombre": "Femeninas",
+      "sub": "Eau de Parfum 100 ml",
+      "precio": 15,
+      "cls": "sf"
+    },
+    {
+      "id": "nicho",
+      "nombre": "Nicho",
+      "sub": "Unisex · EDP 100 ml",
+      "precio": 15,
+      "cls": "sn"
+    },
+    {
+      "id": "micado",
+      "nombre": "Micados",
+      "sub": "Ambientador 100 ml",
+      "precio": 12,
+      "cls": "sk"
+    }
   ],
   "productos": [
-    {"ref": "101", "nombre": "212", "marca": "Carolina Herrera", "cat": "masc", "orden": 1, "stock": 0, "muestra": true},
-    {"ref": "105", "nombre": "Bottled", "marca": "Hugo Boss", "cat": "masc", "orden": 2, "stock": 0, "muestra": true},
-    {"ref": "112", "nombre": "1 Million", "marca": "Paco Rabanne", "cat": "masc", "orden": 3, "stock": 1, "muestra": false},
-    {"ref": "122", "nombre": "Invictus", "marca": "Paco Rabanne", "cat": "masc", "orden": 4, "stock": 0, "muestra": true},
-    {"ref": "128", "nombre": "Sauvage", "marca": "Dior", "cat": "masc", "orden": 5, "stock": 1, "muestra": true},
-    {"ref": "131", "nombre": "Phantom", "marca": "Paco Rabanne", "cat": "masc", "orden": 6, "stock": 0, "muestra": true},
-    {"ref": "133", "nombre": "Stronger With You Intensely", "marca": "Armani", "cat": "masc", "orden": 7, "stock": 0, "muestra": true},
-    {"ref": "137", "nombre": "Sauvage Elixir", "marca": "Dior", "cat": "masc", "orden": 8, "stock": 0, "muestra": true},
-    {"ref": "201", "nombre": "J'Adore", "marca": "Dior", "cat": "fem", "orden": 1, "stock": 1, "muestra": false},
-    {"ref": "203", "nombre": "Coco Mademoiselle", "marca": "Chanel", "cat": "fem", "orden": 2, "stock": 0, "muestra": true},
-    {"ref": "204", "nombre": "Amor Amor", "marca": "Cacharel", "cat": "fem", "orden": 3, "stock": 1, "muestra": false},
-    {"ref": "205", "nombre": "Light Blue", "marca": "Dolce & Gabbana", "cat": "fem", "orden": 4, "stock": 0, "muestra": true},
-    {"ref": "233", "nombre": "La Vie Est Belle", "marca": "Lancôme", "cat": "fem", "orden": 5, "stock": 1, "muestra": true},
-    {"ref": "234", "nombre": "Eau de Rochas", "marca": "Rochas", "cat": "fem", "orden": 6, "stock": 1, "muestra": false},
-    {"ref": "238", "nombre": "Good Girl", "marca": "Carolina Herrera", "cat": "fem", "orden": 7, "stock": 0, "muestra": false},
-    {"ref": "239", "nombre": "Scandal", "marca": "Jean Paul Gaultier", "cat": "fem", "orden": 8, "stock": 1, "muestra": false},
-    {"ref": "241", "nombre": "Black Opium", "marca": "YSL", "cat": "fem", "orden": 9, "stock": 0, "muestra": true},
-    {"ref": "242", "nombre": "Libre", "marca": "YSL", "cat": "fem", "orden": 10, "stock": 0, "muestra": false},
-    {"ref": "244", "nombre": "Fame", "marca": "Paco Rabanne", "cat": "fem", "orden": 11, "stock": 0, "muestra": true},
-    {"ref": "245", "nombre": "Alien", "marca": "Thierry Mugler", "cat": "fem", "orden": 12, "stock": 0, "muestra": true},
-    {"ref": "246", "nombre": "My Way", "marca": "Armani", "cat": "fem", "orden": 13, "stock": 0, "muestra": true},
-    {"ref": "247", "nombre": "Devotion Intense", "marca": "D&G", "cat": "fem", "orden": 14, "stock": 0, "muestra": true},
-    {"ref": "301", "nombre": "Baccarat Rouge 540", "marca": "MFK", "cat": "nicho", "orden": 1, "stock": 1, "muestra": true},
-    {"ref": "302", "nombre": "Tobacco Vanille", "marca": "Tom Ford", "cat": "nicho", "orden": 2, "stock": 0, "muestra": true},
-    {"ref": "702", "nombre": "Océano", "marca": "", "cat": "micado", "orden": 1, "stock": 3, "muestra": false},
-    {"ref": "703", "nombre": "Rosa Blanca", "marca": "", "cat": "micado", "orden": 2, "stock": 0, "muestra": false},
-    {"ref": "704", "nombre": "Frutos Rojos", "marca": "", "cat": "micado", "orden": 3, "stock": 1, "muestra": false},
-    {"ref": "705", "nombre": "Lavanda", "marca": "", "cat": "micado", "orden": 4, "stock": 2, "muestra": false},
-    {"ref": "706", "nombre": "Piruleta", "marca": "", "cat": "micado", "orden": 5, "stock": 1, "muestra": false}
+    {
+      "ref": "101",
+      "nombre": "212",
+      "marca": "Carolina Herrera",
+      "cat": "masc",
+      "orden": 1,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "105",
+      "nombre": "Bottled",
+      "marca": "Hugo Boss",
+      "cat": "masc",
+      "orden": 2,
+      "stock": 0,
+      "muestra": false
+    },
+    {
+      "ref": "112",
+      "nombre": "1 Million",
+      "marca": "Paco Rabanne",
+      "cat": "masc",
+      "orden": 3,
+      "stock": 1,
+      "muestra": false
+    },
+    {
+      "ref": "122",
+      "nombre": "Invictus",
+      "marca": "Paco Rabanne",
+      "cat": "masc",
+      "orden": 4,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "128",
+      "nombre": "Sauvage",
+      "marca": "Dior",
+      "cat": "masc",
+      "orden": 5,
+      "stock": 1,
+      "muestra": true
+    },
+    {
+      "ref": "131",
+      "nombre": "Phantom",
+      "marca": "Paco Rabanne",
+      "cat": "masc",
+      "orden": 6,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "133",
+      "nombre": "Stronger With You Intensely",
+      "marca": "Armani",
+      "cat": "masc",
+      "orden": 7,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "137",
+      "nombre": "Sauvage Elixir",
+      "marca": "Dior",
+      "cat": "masc",
+      "orden": 8,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "201",
+      "nombre": "J'Adore",
+      "marca": "Dior",
+      "cat": "fem",
+      "orden": 1,
+      "stock": 1,
+      "muestra": false
+    },
+    {
+      "ref": "203",
+      "nombre": "Coco Mademoiselle",
+      "marca": "Chanel",
+      "cat": "fem",
+      "orden": 2,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "204",
+      "nombre": "Amor Amor",
+      "marca": "Cacharel",
+      "cat": "fem",
+      "orden": 3,
+      "stock": 1,
+      "muestra": false
+    },
+    {
+      "ref": "205",
+      "nombre": "Light Blue",
+      "marca": "Dolce & Gabbana",
+      "cat": "fem",
+      "orden": 4,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "233",
+      "nombre": "La Vie Est Belle",
+      "marca": "Lancôme",
+      "cat": "fem",
+      "orden": 5,
+      "stock": 1,
+      "muestra": true
+    },
+    {
+      "ref": "234",
+      "nombre": "Eau de Rochas",
+      "marca": "Rochas",
+      "cat": "fem",
+      "orden": 6,
+      "stock": 1,
+      "muestra": false
+    },
+    {
+      "ref": "238",
+      "nombre": "Good Girl",
+      "marca": "Carolina Herrera",
+      "cat": "fem",
+      "orden": 7,
+      "stock": 0,
+      "muestra": false
+    },
+    {
+      "ref": "239",
+      "nombre": "Scandal",
+      "marca": "Jean Paul Gaultier",
+      "cat": "fem",
+      "orden": 8,
+      "stock": 1,
+      "muestra": false
+    },
+    {
+      "ref": "241",
+      "nombre": "Black Opium",
+      "marca": "YSL",
+      "cat": "fem",
+      "orden": 9,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "242",
+      "nombre": "Libre",
+      "marca": "YSL",
+      "cat": "fem",
+      "orden": 10,
+      "stock": 0,
+      "muestra": false
+    },
+    {
+      "ref": "244",
+      "nombre": "Fame",
+      "marca": "Paco Rabanne",
+      "cat": "fem",
+      "orden": 11,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "245",
+      "nombre": "Alien",
+      "marca": "Thierry Mugler",
+      "cat": "fem",
+      "orden": 12,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "246",
+      "nombre": "My Way",
+      "marca": "Armani",
+      "cat": "fem",
+      "orden": 13,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "247",
+      "nombre": "Devotion Intense",
+      "marca": "D&G",
+      "cat": "fem",
+      "orden": 14,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "301",
+      "nombre": "Baccarat Rouge 540",
+      "marca": "MFK",
+      "cat": "nicho",
+      "orden": 1,
+      "stock": 1,
+      "muestra": true
+    },
+    {
+      "ref": "302",
+      "nombre": "Tobacco Vanille",
+      "marca": "Tom Ford",
+      "cat": "nicho",
+      "orden": 2,
+      "stock": 0,
+      "muestra": true
+    },
+    {
+      "ref": "702",
+      "nombre": "Océano",
+      "marca": "",
+      "cat": "micado",
+      "orden": 1,
+      "stock": 3,
+      "muestra": false
+    },
+    {
+      "ref": "703",
+      "nombre": "Rosa Blanca",
+      "marca": "",
+      "cat": "micado",
+      "orden": 2,
+      "stock": 0,
+      "muestra": false
+    },
+    {
+      "ref": "704",
+      "nombre": "Frutos Rojos",
+      "marca": "",
+      "cat": "micado",
+      "orden": 3,
+      "stock": 1,
+      "muestra": false
+    },
+    {
+      "ref": "705",
+      "nombre": "Lavanda",
+      "marca": "",
+      "cat": "micado",
+      "orden": 4,
+      "stock": 2,
+      "muestra": false
+    },
+    {
+      "ref": "706",
+      "nombre": "Piruleta",
+      "marca": "",
+      "cat": "micado",
+      "orden": 5,
+      "stock": 1,
+      "muestra": false
+    }
   ]
 }
