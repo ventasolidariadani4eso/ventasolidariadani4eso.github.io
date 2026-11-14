@@ -202,6 +202,7 @@ body.login nav.tabs{display:none}
       <div>
         <h3>Pedidos apuntados</h3>
         <div class="cards" id="vendPed"></div>
+        <p class="small" style="margin-top:16px"><a href="admin.html?admin" style="color:var(--muted)">Acceso administradores</a></p>
       </div>
       <div id="vendHoy" hidden>
         <h3>Vendido hoy <span id="vendHoyN" class="small"></span></h3>
@@ -710,6 +711,7 @@ $('fLogin').addEventListener('submit',async e=>{ e.preventDefault(); const pass=
   if(cfg.token&&cfg.clave){
     if(pass!==cfg.clave){ $('lMsg').textContent='Contraseña incorrecta.'; $('lPass').select(); return; }
     abrirSesion(); $('lPass').value=''; $('lMsg').textContent=''; document.body.classList.remove('login');
+    if(cfg.modo==='vendedor'){ cfg.modo='completo'; guardarCfg(); document.body.classList.remove('vendedor'); document.querySelector('.eyebrow').textContent='Gestión · Excursión 4.º ESO'; }
     await conectar(); addLinea(); setTab(conectado?'panel':'cfg'); return; }
   $('lMsg').textContent='Comprobando…';
   let f; try{ const r=await fetch(ACCESO+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw r.status; f=await r.json(); }
@@ -728,6 +730,8 @@ $('btnAcceso').onclick=async()=>{ if(!conectado) return toast('Primero conecta e
 function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
 leerCfg(); const recienConfigurado=leerEnlaceConfig(); rellenarForm(); $('pFec').value=hoy();
 if(cfg.modo==='vendedor'){ document.body.classList.add('vendedor'); document.querySelector('.eyebrow').textContent='Venta solidaria · 4.º ESO'; setTab('vend'); }
+// Desde «Acceso administradores» (?admin) un móvil en modo vendedor puede pasar a gestión completa con la contraseña
+if(new URLSearchParams(location.search).has('admin')&&cfg.modo==='vendedor') mostrarLogin();
 // Un dispositivo que ya ha accedido se recuerda; solo se pide contraseña si no está configurado
 conectar().then(()=>{ addLinea(); if(recienConfigurado&&conectado) toast('Listo. Ya puedes apuntar ventas y pedidos.'); if(!cfg.token) mostrarLogin(); });
 </script>
