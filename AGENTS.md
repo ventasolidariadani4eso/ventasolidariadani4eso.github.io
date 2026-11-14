@@ -1,8 +1,8 @@
 # Contexto para asistentes de IA (y personas) que continúen este proyecto
 
 Léelo entero antes de tocar nada. El proyecto debe seguir siendo **independiente de cualquier IA**:
-HTML/CSS/JS estático en GitHub Pages, sin servidor, sin build, sin dependencias externas en tiempo de ejecución
-(salvo Google Fonts, opcional).
+HTML/CSS/JS estático en GitHub Pages, sin servidor, sin build y sin dependencias externas en tiempo de ejecución
+(salvo Google Fonts, opcional, y el servicio de avisos ntfy.sh, opcional).
 
 ## Qué es
 
@@ -10,24 +10,28 @@ Venta solidaria de colonias de equivalencia y ambientadores micado (proveedor **
 gestiona para pagar la excursión de **4.º ESO del IES Ribeira do Louro**. Vende puerta a puerta el alumno (Dani).
 Precios de venta: perfumes 15 €, micados 12 €. Costes: perfume 8 €, micado 6,50 €.
 
-- Web pública: `https://ventasolidariadani4eso.github.io/` (enlace corto: `is.gd/VentaSolidariaDani4ESO`)
-- Gestión: `https://ventasolidariadani4eso.github.io/admin.html` (requiere token + clave; ver más abajo)
-- Repo: `ventasolidariadani4eso/ventasolidariadani4eso.github.io` (público). Rama `main`, Pages desde la raíz.
+- Web pública: **https://ventasolidariadani4eso.github.io/** (sin datos personales en la URL a propósito)
+- Gestión: `https://ventasolidariadani4eso.github.io/admin.html` (enlace discreto «Acceso administradores» en la pública)
+- Repo: `ventasolidariadani4eso/ventasolidariadani4eso.github.io` (organización de GitHub creada para anonimizar;
+  público). Rama `main`, Pages desde la raíz. Antes estuvo en `guillermolareo-art/venta-solidaria-4eso` (ya no existe
+  esa URL; los enlaces cortos de is.gd que apuntaban allí han dejado de funcionar).
+- Copia local de trabajo del propietario: `C:\Users\guill\Documents\venta-solidaria-4eso` (Windows, PowerShell, `gh` con sesión).
 
 ## Archivos
 
 | Ruta | Función |
 |---|---|
-| `index.html` | Catálogo público. Lee `data/stock.json`. Lista completa (sin filtros), estado Disponible / Por encargo, muestra, botón *Pedir* → WhatsApp con texto prellenado. Foto lateral fija en escritorio, banda superior en móvil. |
-| `catalogo.html` | Hoja A4 imprimible (`?modo=bn|color|stock`), mismo diseño que el catálogo en papel original. `window.print()`. |
-| `admin.html` | Gestión completa y modo vendedor. Lee y escribe el repo vía API de GitHub (Contents API) desde el navegador. |
-| `assets/comun.js` | `window.VS`: utilidades, carga de `stock.json`, generador de la hoja A4 (`CAT_CSS`, `catalogoA4`). |
+| `index.html` | Catálogo público. Lee `data/stock.json`. Lista completa sin filtros ni etiquetas de disponibilidad (no muestra «última unidad» ni «por encargo»). Perfumes como «Inspirado en *nombre*» + marca en gris; micados sin «Inspirado en». Botón *Pedir* → WhatsApp con texto prellenado. Foto lateral fija en escritorio, banda superior en móvil. Enlace «Acceso administradores» → `admin.html?admin`. No enlaza a `catalogo.html`. |
+| `catalogo.html` | Hoja A4 imprimible, solo enlazada desde la gestión (`noindex`). Modos `?modo=bn|color|existencias|stock`. Pie con teléfono, web y QR grande (sin fondo, solo marco, para ahorrar tinta). `window.print()`. |
+| `admin.html` | Gestión completa, modo vendedor, acceso con contraseña y avisos push. Lee y escribe el repo vía API de GitHub (Contents API) desde el navegador. |
+| `assets/comun.js` | `window.VS`: utilidades, carga de `stock.json`, generador de la hoja A4 (`CAT_CSS`, `catalogoA4`, `qrSVG`). |
 | `assets/estilo.css` | Tokens y estilos de pantalla (claro/oscuro). |
-| `assets/qrcode.js` | qrcode-generator 1.4.4 (MIT, Kazuhiko Arase), vendorizado. |
+| `assets/qrcode.js` | qrcode-generator 1.4.4 (MIT, Kazuhiko Arase), vendorizado. Lo usan `admin.html` (QR de alta de móviles) y `catalogo.html` (QR del pie). |
 | `data/stock.json` | **Público.** Productos, categorías, precios, stock y muestras. |
-| `data/ventas.enc.json` | **Cifrado.** Toda la gestión (ventas, encargos con clientes, pedidos, costes, historial). |
-| `img/` | Recortes de producto (`w_*` gris claro, `g_*` gris, `c_*` color) y fotos `foto_horizontal/vertical.webp`. |
-| `privado/` | En `.gitignore`. Copias de seguridad descifradas y semilla inicial. **Nunca subir.** |
+| `data/ventas.enc.json` | **Cifrado.** Toda la gestión (ventas, encargos con clientes, pedidos, costes, avisos, historial). |
+| `data/acceso.enc.json` | **Cifrado.** `{t: token, o: owner, r: repo}` cifrado con la clave de gestión, para entrar solo con contraseña. |
+| `img/` | Recortes de producto (`w_*` gris claro, `g_*` gris, `c_*` color), fotos `foto_horizontal/vertical.webp`, iconos `icono.svg`, `icono-32/180/512.png`. |
+| `privado/` | En `.gitignore`. Copias de seguridad descifradas, semilla inicial, imágenes para WhatsApp, tokens en txt. **Nunca subir.** |
 | `.nojekyll` | Pages sirve los archivos tal cual. |
 
 ## Datos
@@ -40,11 +44,12 @@ Precios de venta: perfumes 15 €, micados 12 €. Costes: perfume 8 €, micado
 ```
 Solo stock y muestras. **No** poner aquí costes, ventas ni clientes. `ref` es el número del proveedor (sin el prefijo VG).
 
-### `data/ventas.enc.json` (cifrado)
-Envoltorio: `{ v:1, alg, iter:250000, salt, iv, data }` — AES-GCM-256, clave derivada con PBKDF2-SHA256 de la
-"clave de gestión" (frase que solo conoce la familia). Sin la clave no se puede leer; si se pierde, se pierde el registro.
+### Archivos cifrados
+Envoltorio común: `{ v:1, alg, iter:250000, salt, iv, data }` — AES-GCM-256 con clave derivada por PBKDF2-SHA256 de la
+**clave de gestión** (frase que solo conoce la familia; es también la contraseña de «Acceso administradores»).
+Sin la clave no se pueden leer; si se pierde, se pierde el registro (por eso existe *Exportar copia*).
 
-Contenido descifrado (gestión v2):
+Contenido descifrado de `ventas.enc.json` (gestión v2):
 ```js
 { v: 2,
   costes:   { masc: 8, fem: 8, nicho: 8, micado: 6.5 },
@@ -52,49 +57,61 @@ Contenido descifrado (gestión v2):
   ventas:   [{ id, fecha, ref, cant, precio, coste, origen: 'stock'|'encargo', encargo?, cliente, nota }],
   encargos: [{ id, fecha, ref, cant, cliente, contacto, nota, pagado, estado: 'pendiente'|'entregado'|'cancelado', fechaEntrega?, venta? }],
   ajustes:  { [ref]: enteroAcumulado },   // correcciones manuales de stock
+  avisos:   { canal, ventas: bool, encargos: bool },   // opcional, ntfy
   log:      [{ t: ISO, desc }] }          // máx. 300
 ```
 Invariante: `stock(ref) = Σ recibido − Σ vendido + ajustes(ref)`. El panel marca con ≠ los descuadres.
-Precio y coste se guardan en cada venta (si cambian después, las ventas antiguas no varían).
+Precio y coste se guardan en cada venta.
 
 ## Cómo funciona `admin.html`
 
-- Configuración por dispositivo en `localStorage['vs4eso.cfg'] = { owner, repo, token, clave, modo }`.
-  `modo`: `'completo'` (familia) o `'vendedor'` (pantalla con solo *Vendido* y *Pedir*).
-- Alta de otro móvil por QR / enlace `admin.html#cfg=<base64url(JSON {o,r,t,k,m})>`: se guarda y se borra el hash.
-  El fragmento `#` no llega a ningún servidor, pero el enlace contiene secretos: solo en persona.
-- Token: *fine-grained PAT* del propietario, solo este repo, permiso **Contents: Read and write**.
-- Cada acción pasa por `guardar(desc, fn)`: `fn(stockCopia, gestionCopia)` modifica copias y devuelve `true` si tocó el
-  stock; se escribe `stock.json` (si procede) y después `ventas.enc.json`. Ante 409/422 recarga y reintenta una vez.
-  Las validaciones de negocio lanzan `fallo('mensaje')`.
-- Mensajes de commit **genéricos** (`Actualiza stock`, `Actualiza registro`) para no revelar ventas en el repo público.
-- Acciones: vender, corrección de stock ±1, muestra, encargo (crear, entregar → venta + descuenta stock, pagado,
-  cancelar, reabrir), pedidos (crear, recibir → suma stock, deshacer recepción, eliminar), anular venta, costes,
-  exportar/importar copia (JSON v2 descifrado), QR para otro dispositivo.
-- Los botones destructivos piden doble pulsación (no hay `confirm()`).
+- **Configuración por dispositivo** en `localStorage['vs4eso.cfg'] = { owner, repo, token, clave, modo }`.
+  En `*.github.io` el owner/repo se deducen del dominio. `modo`: `'completo'` o `'vendedor'`.
+- **Token**: *fine-grained PAT* con *Resource owner* = organización `ventasolidariadani4eso`, acceso al repo y
+  permiso **Contents: Read and write**. Un token del usuario personal ya no sirve (da 403 al escribir).
+  Al renovarlo: pegarlo en *Ajustes* de un dispositivo → *Guardar y conectar* → *Activar / actualizar acceso con contraseña*
+  → regenerar los QR de los móviles en modo vendedor.
+- **Tres formas de configurar un dispositivo**:
+  1. *Ajustes* manual (token + clave).
+  2. **Acceso administradores** (`admin.html?admin`): solo contraseña; descifra `data/acceso.enc.json`. El dispositivo
+     se recuerda (casilla «Recordar», marcada por defecto). Si el dispositivo estaba en modo vendedor, con la contraseña
+     pasa a gestión completa.
+  3. **QR / enlace** `admin.html#cfg=<base64url(JSON {o,r,t,k,m})>` generado en *Ajustes → Configurar otro móvil*
+     («solo vender» o «gestión completa»). Contiene secretos: solo en persona.
+- **Modo vendedor** (móvil del alumno): solo productos con stock y botón *Vendido*; formulario *Apuntar un pedido* con
+  destinatario obligatorio; lista de pedidos pendientes; sin cifras económicas. No pide contraseña.
+- **Guardado**: `guardar(desc, fn)` → `fn(stockCopia, gestionCopia)` modifica copias y devuelve `true` si tocó el stock;
+  se escribe `stock.json` (si procede) y luego `ventas.enc.json`; ante 409/422 recarga y reintenta una vez. Errores
+  visibles con *toast* (401/403 → «este dispositivo no tiene permiso… QR nuevo»). Validaciones con `fallo('mensaje')`.
+- **Avisos push**: tras guardar una venta o un encargo nuevo/entregado se hace `POST https://ntfy.sh/` con
+  `{topic: canal, title, message, tags}`. El canal (aleatorio, `venta-solidaria-…`) se guarda cifrado en la gestión, así
+  avisan todos los dispositivos. Los móviles se suscriben con la app **ntfy**. Fallos de ntfy se ignoran.
+- Commits **genéricos** (`Actualiza stock`, `Actualiza registro`, `Actualiza acceso`) para no revelar ventas.
+- Botones destructivos con doble pulsación (no hay `confirm()`).
 
 ## Reglas para quien modifique el código
 
 1. No añadir servidor, build, frameworks ni servicios de pago. Mantener todo estático y en español.
-2. No escribir nunca tokens, claves ni datos de clientes en el repo, en commits ni en archivos no cifrados.
-   `privado/` no se sube.
-3. Los datos (`data/*.json`) los cambia la app. Antes de commitear código: `git pull --rebase --autostash origin main`
-   y **no** sobrescribir `data/stock.json` ni `data/ventas.enc.json` con copias locales antiguas.
-4. Si se cambia la estructura de la gestión, subir `v` y añadir migración en `normalizar()` (ya migra desde v1).
-5. Probar en local con `python -m http.server 8000`. Para `admin.html`, simular la API de GitHub
-   (p. ej. Playwright interceptando `https://api.github.com/**` con un almacén en memoria) en vez de usar el repo real.
-6. Despliegue: commit + push a `main`; Pages tarda 1–2 min. En Windows (PowerShell):
-   `cd "$HOME\Documents\venta-solidaria-4eso"; git pull --rebase --autostash origin main; git add <archivos>; git commit -m "…"; git push`
+2. Nunca escribir tokens, claves ni datos de clientes en el repo, en commits ni en archivos sin cifrar. `privado/` no se sube.
+3. Los datos (`data/*.json`) los cambia la app. Antes de commitear código: `git pull --rebase origin main`
+   (la web hace commits continuamente) y **no** sobrescribir `data/*.json` con copias locales antiguas.
+4. **No ejecutar `git checkout`, `git restore`, `git stash` ni reescribir archivos del repo que no sean objeto de la
+   tarea**: ya ha pasado que otro agente devolvía archivos a versiones antiguas y se perdían cambios. Trabajar PDFs u
+   otros entregables fuera del repo o en `privado/`.
+5. Si cambia la estructura de la gestión, subir `v` y migrar en `normalizar()` (ya migra desde v1).
+6. Probar en local con `python -m http.server 8000`. Para `admin.html`, simular `https://api.github.com/**` y
+   `https://ntfy.sh/**` (p. ej. Playwright con almacén en memoria) en vez de usar el repo real.
+7. Despliegue (PowerShell):
+   `cd "$HOME\Documents\venta-solidaria-4eso"; git pull --rebase origin main; git add <archivos>; git commit -m "…"; git push`
+   Pages tarda 1–2 min. Comprobar en la web con recarga forzada.
 
-## Estado a 13/11/2026
+## Estado a 14/11/2026
 
-- **Despliegue y URLs**: El repositorio y GitHub Pages están en `ventasolidariadani4eso/ventasolidariadani4eso.github.io` (URL pública directa: `https://ventasolidariadani4eso.github.io/`).
-- Pedido inicial (23 uds, 167,50 €) **recibido**. Segundo pedido (19 uds, 134 €) **pendiente de recibir**:
-  al llegar, *Pedidos → Marcar recibido* (stock pasa de 15 a 34).
-- 8 unidades vendidas antes de la app (108 €, beneficio 50 €), cargadas desde `privado/gestion-inicial-2026-11-13.json`.
-- Productos nuevos del segundo pedido: 137 Sauvage Elixir y 246 My Way (confirmar si traen muestra).
-- **Ajustes recientes completados**:
-  - **WhatsApp**: Enlace directo con protocolo `whatsapp://send?text=...` para abrir la app instalada sin pasar por la web desvinculada.
-  - **Página pública (`index.html`)**: Perfumes presentados con prefijo "Inspirado en".
-  - **Catálogo imprimible (`catalogo.html` / `assets/comun.js`)**: Modos B/N y Color limpios sin mostrar stock ni "por encargo" (para entregar a clientes); botón "Con existencias (B/N)" para uso interno de Dani; pie de página con teléfono y enlace a la web pública.
-  - **Modo vendedor (`admin.html`)**: "Lo que llevo para vender" arriba del todo; maquetación CSS grid para alinear en móviles el badge "Quedan N" con el botón "Vendido"; sección "Vendido hoy" al final de la página con opción de anular ventas erróneas (doble pulsación de confirmación).
+- Pedido inicial (23 uds, 167,50 €) recibido. Segundo pedido (19 uds, 134 €) **pendiente de recibir**: al llegar,
+  *Pedidos → Marcar recibido*. Confirmar si 137 Sauvage Elixir y 246 My Way traen muestra.
+- 8 unidades vendidas antes de la app (108 €), cargadas desde `privado/gestion-inicial-2026-11-13.json`.
+- Token nuevo de la organización en uso; los tokens antiguos deben borrarse. El móvil del alumno debe tener el QR
+  generado con el token nuevo.
+- Avisos ntfy activos y probados.
+- Pendiente/ideas: renovar el token antes de que caduque; exportar copia de seguridad semanal; al terminar la venta,
+  exportar copia final y desactivar Pages o archivar el repo.
