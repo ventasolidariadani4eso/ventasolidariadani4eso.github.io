@@ -60,6 +60,7 @@ body.vendedor nav.tabs{display:none}
 .vform input{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);min-height:44px;width:100%}
 .vform .btn{grid-column:1/-1;justify-content:center}
 @media (max-width:480px){.vform{grid-template-columns:minmax(0,1fr) 70px}.vform .cli{grid-column:1/-1}}
+body.login nav.tabs{display:none}
 </style>
 </head>
 <body>
@@ -69,6 +70,20 @@ body.vendedor nav.tabs{display:none}
     <h1>Colonias <em>&amp;</em> Micados</h1>
     <p class="note" id="estado">Cargando…</p>
   </header>
+
+  <!-- ACCESO CON CONTRASEÑA -->
+  <section id="v-login" hidden>
+    <form class="panel" id="fLogin" autocomplete="on" style="max-width:460px">
+      <h2>Acceso de administradores</h2>
+      <p class="note">Escribe la contraseña de administración.</p>
+      <input type="text" name="username" value="admin" autocomplete="username" hidden>
+      <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+      <label class="chk"><input type="checkbox" id="lRec" checked> Recordar en este dispositivo</label>
+      <div class="bar"><button class="btn" type="submit">Entrar</button><a class="chip" href="./">Volver al catálogo</a></div>
+      <p class="note" id="lMsg"></p>
+      <details><summary>Configuración manual (token y clave)</summary><button class="btn ghost" type="button" id="lManual">Ir a la configuración manual</button></details>
+    </form>
+  </section>
 
   <nav class="tabs" role="tablist">
     <button role="tab" id="tab-panel" aria-selected="true" data-tab="panel">Panel</button>
@@ -211,6 +226,12 @@ body.vendedor nav.tabs{display:none}
         <div class="bar"><button class="btn dark" type="submit">Guardar y conectar</button><button class="btn ghost" type="button" id="olvidar">Borrar de este dispositivo</button></div>
         <p class="note" id="cfgMsg"></p>
       </form>
+      <div class="panel">
+        <h2>Acceso con contraseña</h2>
+        <p class="note">Permite entrar desde cualquier dispositivo con el enlace «Acceso administradores» de la web pública, escribiendo solo la <strong>clave de gestión</strong> como contraseña. El token se guarda en el repositorio cifrado con esa clave. Usa una frase larga (4 palabras o más). Vuelve a pulsar si cambias el token o la clave.</p>
+        <div class="bar"><button class="btn dark" type="button" id="btnAcceso">Activar / actualizar acceso con contraseña</button></div>
+        <p class="note" id="accMsg"></p>
+      </div>
       <div class="panel" id="otroDisp">
         <h2>Configurar otro móvil</h2>
         <p class="note">Lo escanean con la cámara del móvil y queda listo, sin escribir nada ni tener cuenta de GitHub.<br>
@@ -670,11 +691,36 @@ $('qrVer').onclick=$('qrVer2').onclick=(ev)=>{
 $('qrOcultar').onclick=()=>{ $('qr').hidden=true; $('qr').innerHTML=''; $('qrCopiar').hidden=true; $('qrOcultar').hidden=true; $('qrVer').hidden=false; $('qrVer2').hidden=false; };
 $('qrCopiar').onclick=async()=>{ try{ await navigator.clipboard.writeText(enlaceConfig()); toast('Enlace copiado. Envíalo por privado y bórralo después.'); }catch(e){ toast('No se pudo copiar'); } };
 
+
+/* ========== acceso con contraseña (token cifrado con la clave de gestión en data/acceso.enc.json) ========== */
+const ACCESO='data/acceso.enc.json';
+async function claveDe(pass,salt){ const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']); }
+async function cifrarCon(pass,o){ const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await claveDe(pass,salt),new TextEncoder().encode(JSON.stringify(o))));
+  return {v:1,alg:'AES-GCM-256 / PBKDF2-SHA256',iter:ITER,salt:by2b(salt),iv:by2b(iv),data:by2b(ct)}; }
+async function descifrarCon(pass,f){ const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b2by(f.iv)},await claveDe(pass,b2by(f.salt)),b2by(f.data)); return JSON.parse(new TextDecoder().decode(pt)); }
+function mostrarLogin(){ document.body.classList.add('login'); setTab('login'); estado('Acceso restringido a administradores.'); setTimeout(()=>$('lPass').focus(),50); }
+$('lManual').onclick=()=>{ document.body.classList.remove('login'); setTab('cfg'); };
+$('fLogin').addEventListener('submit',async e=>{ e.preventDefault(); const pass=$('lPass').value; if(!pass) return;
+  $('lMsg').textContent='Comprobando…';
+  let f; try{ const r=await fetch(ACCESO+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw r.status; f=await r.json(); }
+  catch(_){ $('lMsg').textContent='El acceso con contraseña aún no está activado. Actívalo en Ajustes desde un dispositivo ya configurado.'; return; }
+  let d; try{ d=await descifrarCon(pass,f); }catch(_){ $('lMsg').textContent='Contraseña incorrecta.'; $('lPass').select(); return; }
+  cfg.token=d.t; cfg.clave=pass; cfg.owner=cfg.owner||d.o; cfg.repo=cfg.repo||d.r; cfg.modo='completo'; if($('lRec').checked) guardarCfg();
+  $('lPass').value=''; $('lMsg').textContent=''; document.body.classList.remove('login'); rellenarForm();
+  await conectar(); if(conectado){ setTab('panel'); toast('Bienvenido'); } else setTab('cfg'); });
+$('btnAcceso').onclick=async()=>{ if(!conectado) return toast('Primero conecta este dispositivo');
+  $('accMsg').textContent='Guardando…';
+  try{ const f=await cifrarCon(cfg.clave,{t:cfg.token,o:cfg.owner,r:cfg.repo}); const cur=await leer(ACCESO); await escribir(ACCESO,JSON.stringify(f)+'\n',cur&&cur.sha,'Actualiza acceso');
+    $('accMsg').textContent='Activado. En 1–2 minutos podréis entrar desde «Acceso administradores» con la clave de gestión.'; }
+  catch(e){ $('accMsg').textContent='No se pudo guardar ('+(e.status||e.message)+').'; } };
+
 /* ========== pestañas y arranque ========== */
-function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
+function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
 leerCfg(); const recienConfigurado=leerEnlaceConfig(); rellenarForm(); $('pFec').value=hoy();
 if(cfg.modo==='vendedor'){ document.body.classList.add('vendedor'); document.querySelector('.eyebrow').textContent='Venta solidaria · 4.º ESO'; setTab('vend'); }
-conectar().then(()=>{ addLinea(); if(recienConfigurado&&conectado) toast('Listo. Ya puedes apuntar ventas y pedidos.'); if(!cfg.token) setTab('cfg'); });
+conectar().then(()=>{ addLinea(); if(recienConfigurado&&conectado) toast('Listo. Ya puedes apuntar ventas y pedidos.'); if(!cfg.token) mostrarLogin(); });
 </script>
 </body>
 </html>
