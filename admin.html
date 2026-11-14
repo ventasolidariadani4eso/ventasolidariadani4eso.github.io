@@ -188,6 +188,11 @@ body.login nav.tabs{display:none}
         <p class="note" style="margin:0 0 12px">Pulsa <strong>Vendido</strong> cuando entregues uno.</p>
         <div id="vendLista"></div>
       </div>
+      <div id="vendHoy" hidden>
+        <h3>Vendido hoy <span id="vendHoyN" class="small"></span></h3>
+        <p class="note" style="margin:0 0 10px">Si te has equivocado, pulsa <strong>Anular</strong>.</p>
+        <div id="vendHoyLista"></div>
+      </div>
       <form class="panel" id="fVend" autocomplete="off">
         <h2>Apuntar un pedido</h2>
         <p class="note">Si alguien quiere uno que no llevas o que está agotado.</p>
@@ -203,11 +208,6 @@ body.login nav.tabs{display:none}
         <h3>Pedidos apuntados</h3>
         <div class="cards" id="vendPed"></div>
         <p class="small" style="margin-top:16px"><a href="admin.html?admin" style="color:var(--muted)">Acceso administradores</a></p>
-      </div>
-      <div id="vendHoy" hidden>
-        <h3>Vendido hoy <span id="vendHoyN" class="small"></span></h3>
-        <p class="note" style="margin:0 0 10px">Si te has equivocado, pulsa <strong>Anular</strong>.</p>
-        <div id="vendHoyLista"></div>
       </div>
     </div>
   </section>
