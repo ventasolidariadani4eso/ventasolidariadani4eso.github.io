@@ -188,10 +188,10 @@ body.login nav.tabs{display:none}
         <p class="note" style="margin:0 0 12px">Pulsa <strong>Vendido</strong> cuando entregues uno.</p>
         <div id="vendLista"></div>
       </div>
-      <div id="vendHoy" hidden>
+      <div id="vendHoy">
         <h3>Vendido hoy <span id="vendHoyN" class="small"></span></h3>
-        <p class="note" style="margin:0 0 10px">Si te has equivocado, pulsa <strong>Anular</strong>.</p>
-        <div id="vendHoyLista"></div>
+        <p class="note" style="margin:0 0 10px">Si te has equivocado al pulsar <strong>Vendido</strong>, aquí puedes <strong>Anular</strong> la venta.</p>
+        <div id="vendHoyLista"><div class="empty" style="padding:14px">Aún no has vendido nada hoy. Cuando pulses «Vendido», la venta aparecerá aquí con su botón «Anular».</div></div>
       </div>
       <form class="panel" id="fVend" autocomplete="off">
         <h2>Apuntar un pedido</h2>
@@ -364,9 +364,7 @@ function pintarVend(){
   // Ventas de hoy — permite anular errores
   const hoyStr=hoy();
   const ventasHoy=(G?.ventas||[]).filter(v=>v.fecha===hoyStr).slice().reverse();
-  const divHoy=$('vendHoy');
   if(ventasHoy.length){
-    divHoy.hidden=false;
     $('vendHoyN').textContent='('+ventasHoy.length+')';
     $('vendHoyLista').innerHTML=ventasHoy.map(v=>{
       const pr=precio(v.ref);
@@ -378,7 +376,7 @@ function pintarVend(){
         +'<button class="btn ghost" data-ven="anular" data-id="'+esc(v.id)+'"'+(off?' disabled':'')+' data-confirm="1">Anular</button>'
         +'</div></div>';
     }).join('');
-  } else { divHoy.hidden=true; }
+  } else { $('vendHoyN').textContent=''; $('vendHoyLista').innerHTML='<div class="empty" style="padding:14px">Aún no has vendido nada hoy. Cuando pulses «Vendido», la venta aparecerá aquí con su botón «Anular».</div>'; }
 }
 function pintarPanel(){
   if(!stock) return; const R=calc(), ok=conectado&&!!G;
