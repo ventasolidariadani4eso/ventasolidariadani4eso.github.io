@@ -233,6 +233,17 @@ body.login nav.tabs{display:none}
         <div class="bar"><button class="btn dark" type="button" id="btnAcceso">Activar / actualizar acceso con contraseña</button></div>
         <p class="note" id="accMsg"></p>
       </div>
+      <div class="panel">
+        <h2>Avisos en el móvil</h2>
+        <p class="note">Recibe una notificación cada vez que se apunta una venta o un pedido, desde cualquier dispositivo (también el de «solo vender").
+        1) Instala la app gratuita <strong>ntfy</strong> (App Store / Google Play). 2) Pulsa «+» y suscríbete al <strong>canal</strong> de abajo. 3) Pulsa «Guardar» y «Enviar prueba».
+        El nombre del canal es como una contraseña: quien lo conozca puede ver los avisos.</p>
+        <div class="field"><label for="nCanal">Canal de avisos</label><input id="nCanal" autocomplete="off" spellcheck="false"></div>
+        <label class="chk"><input type="checkbox" id="nVentas" checked> Ventas</label>
+        <label class="chk"><input type="checkbox" id="nEnc" checked> Pedidos nuevos y entregados</label>
+        <div class="bar"><button class="btn dark" type="button" id="nGuardar">Guardar</button><button class="btn ghost" type="button" id="nProbar">Enviar prueba</button><button class="btn ghost" type="button" id="nCopiar">Copiar canal</button></div>
+        <p class="note" id="nMsg"></p>
+      </div>
       <div class="panel" id="otroDisp">
         <h2>Configurar otro móvil</h2>
         <p class="note">Lo escanean con la cámara del móvil y queda listo, sin escribir nada ni tener cuenta de GitHub.<br>
@@ -326,7 +337,7 @@ function calc(){
 }
 
 /* ========== pintado ========== */
-function pintarTodo(){ pintarPanel(); pintarLista(); pintarEnc(); pintarPed(); pintarVen(); pintarCfg(); pintarVend(); }
+function pintarTodo(){ try{ pintarAvisos(); }catch(e){} pintarPanel(); pintarLista(); pintarEnc(); pintarPed(); pintarVen(); pintarCfg(); pintarVend(); }
 let vendAbierto=null;
 function pintarVend(){
   if(cfg.modo!=='vendedor'||!stock) return;
@@ -562,8 +573,10 @@ async function guardar(desc,fn){
     try{ gSha=await escribir(GEST,JSON.stringify(await cifrar(g))+'\n',gSha,'Actualiza registro'); }
     catch(e){ if(e.status!==409&&e.status!==422) throw e; await recargarG(); const g2=clon(G); fn(clon(base),g2); g2.log.unshift({t:new Date().toISOString(),desc}); g2.log=g2.log.slice(0,300);
       gSha=await escribir(GEST,JSON.stringify(await cifrar(g2))+'\n',gSha,'Actualiza registro'); g=g2; }
-    G=g; estado('Guardado. La página pública se actualiza en 1–2 minutos.'); return true;
-  }catch(e){ estado(e.usuario?e.message:'No se pudo guardar ('+(e.status||e.message)+'). Recarga la página e inténtalo de nuevo.',true); if(e.usuario) toast(e.message); return false; }
+    G=g; avisarSiToca(desc); estado('Guardado. La página pública se actualiza en 1–2 minutos.'); return true;
+  }catch(e){
+    const m=e.usuario?e.message:(e.status===401||e.status===403)?'Este dispositivo no tiene permiso para guardar (token antiguo, caducado o sin permiso de escritura). Hay que configurarlo con un QR nuevo.':'No se pudo guardar ('+(e.status||e.message)+'). Comprueba la conexión e inténtalo de nuevo.';
+    estado(m,true); toast(m); return false; }
   finally{ ocupado=false; pintarTodo(); }
 }
 const fallo=m=>{ const e=new Error(m); e.usuario=true; throw e; };
@@ -627,7 +640,7 @@ $('fEnc').addEventListener('submit',async e=>{ e.preventDefault(); if(!conectado
   if(await guardar('Nuevo encargo: '+nom(ref)+' × '+cant+(en.cliente?' ('+en.cliente+')':''),(s,g)=>{ g.encargos.push(clon(en)); return false; })){ $('fEnc').reset(); $('eProd').value=ref; toast('Encargo apuntado'); } });
 
 /* --- pedido desde el modo vendedor (destinatario obligatorio) --- */
-$('fVend').addEventListener('submit',async e=>{ e.preventDefault(); if(!conectado) return toast('Sin conexión');
+$('fVend').addEventListener('submit',async e=>{ e.preventDefault(); if(!conectado) return toast($('estado').textContent||'Sin conexión con GitHub');
   const ref=$('vProd').value, cant=Math.max(1,parseInt($('vCant').value,10)||1), cli=$('vCli').value.trim();
   if(!cli){ $('vCli').focus(); return toast('Escribe para quién es'); }
   const en={id:uid(),fecha:hoy(),ref,cant,cliente:cli,contacto:$('vCon').value.trim(),nota:'Apuntado por el vendedor',pagado:false,estado:'pendiente'};
@@ -725,6 +738,28 @@ $('btnAcceso').onclick=async()=>{ if(!conectado) return toast('Primero conecta e
   try{ const f=await cifrarCon(cfg.clave,{t:cfg.token,o:cfg.owner,r:cfg.repo}); const cur=await leer(ACCESO); await escribir(ACCESO,JSON.stringify(f)+'\n',cur&&cur.sha,'Actualiza acceso');
     $('accMsg').textContent='Activado. En 1–2 minutos podréis entrar desde «Acceso administradores» con la clave de gestión.'; }
   catch(e){ $('accMsg').textContent='No se pudo guardar ('+(e.status||e.message)+').'; } };
+
+
+/* ========== avisos push (ntfy.sh): el canal se guarda cifrado en la gestión, así avisan todos los dispositivos ========== */
+function canalAleatorio(){ const c='abcdefghijkmnpqrstuvwxyz23456789'; let s=''; const r=crypto.getRandomValues(new Uint8Array(14)); for(const b of r) s+=c[b%c.length]; return 'venta-solidaria-'+s; }
+function enviarAviso(canal,titulo,mensaje,tags){
+  return fetch('https://ntfy.sh/',{method:'POST',body:JSON.stringify({topic:canal,title:titulo,message:mensaje,tags:tags||[]})}); }
+function avisarSiToca(desc){
+  const av=G&&G.avisos; if(!av||!av.canal) return;
+  const venta=/^Venta: /.test(desc), enc=/^(Nuevo encargo|Encargo entregado): /.test(desc);
+  if((venta&&av.ventas!==false)||(enc&&av.encargos!==false)){
+    const quien=cfg.modo==='vendedor'?' (vendedor)':'';
+    enviarAviso(av.canal, venta?'Venta'+quien:'Pedido'+quien, desc, [venta?'moneybag':'package']).catch(()=>{});
+  } }
+function pintarAvisos(){ const av=(G&&G.avisos)||{}; if(document.activeElement!==$('nCanal')) $('nCanal').value=av.canal||$('nCanal').value||canalAleatorio();
+  $('nVentas').checked=av.ventas!==false; $('nEnc').checked=av.encargos!==false; }
+$('nGuardar').onclick=async()=>{ const canal=$('nCanal').value.trim(); if(!/^[A-Za-z0-9_-]{8,64}$/.test(canal)) return toast('El canal debe tener 8–64 letras, números, - o _');
+  const av={canal,ventas:$('nVentas').checked,encargos:$('nEnc').checked};
+  if(await guardar('Avisos configurados',(s,g)=>{ g.avisos=av; return false; })) $('nMsg').textContent='Guardado. Todos los dispositivos avisarán a este canal.'; };
+$('nProbar').onclick=async()=>{ const canal=$('nCanal').value.trim(); if(!canal) return;
+  try{ const r=await enviarAviso(canal,'Prueba','Los avisos de la venta solidaria funcionan.',['tada']); $('nMsg').textContent=r.ok?'Prueba enviada. Debería llegar a los móviles suscritos.':'ntfy respondió '+r.status; }
+  catch(e){ $('nMsg').textContent='No se pudo enviar la prueba (sin conexión).'; } };
+$('nCopiar').onclick=async()=>{ try{ await navigator.clipboard.writeText($('nCanal').value.trim()); toast('Canal copiado'); }catch(e){ toast('Cópialo a mano'); } };
 
 /* ========== pestañas y arranque ========== */
 function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
