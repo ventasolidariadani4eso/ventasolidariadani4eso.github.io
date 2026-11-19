@@ -88,7 +88,14 @@ Precio y coste se guardan en cada venta.
   Al abrir esa pestaña, `setTab('enc')` añade `body.ancho` (la columna central pasa de 940 a 1360 px).
 - **Vista «Encargos y pedidos»** (`#v-enc`, rejilla `.encped`): dos columnas desde 1000 px (encargos ≈ 2/3 a la
   izquierda, `aside.colPed` ≈ 1/3 a la derecha); en pantallas estrechas, una debajo de otra (primero encargos).
-  - Columna derecha **Pedidos al proveedor**:
+  - Columna derecha **Pedidos al proveedor**, de arriba abajo: *Nuevo pedido* (plegado), pedidos por llegar (`#peds`),
+    tabla de cobertura (`#faltan`), recibidos plegados (`#pedsRec`) y nota.
+  - **Alineación horizontal** (`alinearTablas()` → `alinearAhora()`): con dos columnas (≥ 1000 px), vista *Por producto*
+    y sin búsqueda, iguala la altura de cada fila de producto en la tabla de encargos (`#encPend .encT`) y en la de
+    cobertura (`#faltan .cob`), emparejadas por `data-ref`; añade filas de relleno `tr.alfill` frente a la ficha abierta
+    (`tr.edet`) y pone `margin-top` a la tabla que empieza más arriba para que las cabeceras coincidan. Se recalcula al
+    pintar, al cambiar de pestaña, al redimensionar y al abrir o cerrar cualquier `<details>` de la vista. En móvil no
+    se aplica. Ambas tablas usan el mismo orden (primero lo que falta, luego por ref).
     - `#faltan` = tabla **Cobertura de los encargos**: por cada producto con encargos pendientes, *Enc.* (uds encargadas),
       *Stock*, *Llega* (en pedidos sin recibir) y *Falta* = `encP − stock − pend` (✓ si está cubierto). Botón
       **Pedir lo que falta (N uds)** (`#pedirFalt`): rellena el formulario de pedido con esas líneas y lo abre.

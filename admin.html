@@ -126,6 +126,7 @@ body.ancho .wrap{max-width:1360px}
 .ech.fl{--pc:var(--warn);background:transparent;color:var(--warn);border-style:dashed}
 .ech .eu{font-weight:500;opacity:.85}
 .ech[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--fg)}
+#v-enc tr.alfill>td{border:0;padding:0}
 .encT tr.edet>td{background:var(--chip);padding:6px}
 .edet .egrp{border-radius:8px}
 .edet .ehead{padding:5px 10px}
@@ -244,7 +245,6 @@ body.ancho .wrap{max-width:1360px}
       </div>
       <aside class="colPed" aria-label="Pedidos al proveedor">
         <h2 class="colh">Pedidos al proveedor</h2>
-        <div class="box" id="faltan"></div>
         <details id="dPed"><summary style="font-weight:600;color:var(--fg)">＋ Nuevo pedido</summary>
         <form class="panel" id="fPed" autocomplete="off" style="margin-top:8px">
         <div class="grid2">
@@ -258,6 +258,8 @@ body.ancho .wrap{max-width:1360px}
       </form>
         </details>
         <div class="cards" id="peds"></div>
+        <div class="box" id="faltan"></div>
+        <div id="pedsRec"></div>
         <p class="note">Al marcar un pedido como recibido, sus unidades se suman al stock (y a la página pública).</p>
       </aside>
     </div>
@@ -604,10 +606,33 @@ function pintarEncProd(todosPend){
       const chips=items.map(e=>{ const c=COB.porEnc[e.id]||{partes:[],falta:n(e.cant)};
         return c.partes.map(pt=>chipEnc(e,pt)).join('')+(c.falta>0?chipEnc(e,{tipo:'falta',u:c.falta}):''); }).join('');
       const sel=items.find(e=>e.id===encSel);
-      return '<tr><td class="l"><span class="pn"><span class="ref">'+esc(ref)+'</span> '+esc(p?p.nombre:ref)+'<span class="small">'+x.encP+' encargad'+(x.encP===1?'a':'as')+' · stock '+n(p?.stock)+(x.pend?' · llegan '+x.pend:'')+'</span></span></td>'
+      return '<tr data-ref="'+esc(ref)+'"><td class="l"><span class="pn"><span class="ref">'+esc(ref)+'</span> '+esc(p?p.nombre:ref)+'<span class="small">'+x.encP+' encargad'+(x.encP===1?'a':'as')+' · stock '+n(p?.stock)+(x.pend?' · llegan '+x.pend:'')+'</span></span></td>'
         +'<td class="l"><div class="echs">'+chips+'</div></td><td>'+(f>0?'<span class="fl">'+f+'</span>':'<span class="ok">✓</span>')+'</td></tr>'+(sel?det(sel):'');
     }).join('')+'</tbody></table></div></div>';
 }
+/* Alinea en horizontal la tabla de encargos (izquierda) y la de cobertura (derecha): mismo inicio y misma altura por
+   producto, para comparar una colonia en las dos columnas. Solo con dos columnas, vista por producto y sin búsqueda. */
+let alinPend=0;
+function alinearTablas(){ cancelAnimationFrame(alinPend); alinPend=requestAnimationFrame(alinearAhora); }
+function alinearAhora(){
+  const tL=document.querySelector('#encPend .encT'), tR=document.querySelector('#faltan .cob'), boxL=$('encPend'), boxR=$('faltan');
+  boxL.style.marginTop=''; boxR.style.marginTop='';
+  document.querySelectorAll('#v-enc tr.alfill').forEach(x=>x.remove());
+  document.querySelectorAll('#v-enc tr[data-al]').forEach(x=>{ x.style.height=''; x.removeAttribute('data-al'); });
+  if(!tL||!tR||$('v-enc').hidden||encModo!=='prod'||encQ||!matchMedia('(min-width:1000px)').matches) return;
+  const filasR={}; tR.querySelectorAll('tbody tr[data-ref]').forEach(r=>filasR[r.dataset.ref]=r);
+  const par=(a,b)=>{ const h=Math.max(a.getBoundingClientRect().height,b.getBoundingClientRect().height); for(const x of [a,b]){ x.style.height=h+'px'; x.setAttribute('data-al',''); } };
+  par(tL.tHead.rows[0],tR.tHead.rows[0]);
+  let ult=null;
+  for(const r of tL.tBodies[0].rows){
+    if(r.dataset.ref&&filasR[r.dataset.ref]){ ult=filasR[r.dataset.ref]; par(r,ult); }
+    else if(ult){ const f=document.createElement('tr'); f.className='alfill'; f.innerHTML='<td colspan="5"></td>'; f.style.height=r.getBoundingClientRect().height+'px'; ult.after(f); ult=f; }
+  }
+  const d=tL.tHead.getBoundingClientRect().top-tR.tHead.getBoundingClientRect().top;
+  if(Math.abs(d)>1){ if(d>0) boxR.style.marginTop=d+'px'; else boxL.style.marginTop=(-d)+'px'; }
+}
+addEventListener('resize',alinearTablas);
+$('v-enc').addEventListener('toggle',alinearTablas,true);
 function pintarEnc(){
   const ok=conectado&&G;
   $('eProd').innerHTML=opcionesProd($('eProd').value);
@@ -641,6 +666,7 @@ function pintarEnc(){
     }).join(''):'<div class="empty">'+(encQ&&todosPend.length?'Ningún encargo pendiente coincide con la búsqueda.':'No hay encargos pendientes.')+'</div>';
     $('encRes').textContent=pend.length?L.length+' cliente'+(L.length===1?'':'s')+' · '+tU+' uds · '+eur0(tE)+(tD?' · sin cobrar '+eur0(tD):''):'';
   } else pintarEncProd(todosPend);
+  alinearTablas();
   const hist=G.encargos.filter(e=>e.estado!=='pendiente').filter(coincideEnc).slice(-40).reverse();
   $('encHist').innerHTML=hist.length?hist.map(e=>filaEnc(e,true)).join(''):'<p class="small" style="padding:8px 12px;margin:0">Nada todavía.</p>';
   // Cobertura de encargos: lo encargado frente a stock y pedidos por llegar
@@ -652,7 +678,7 @@ function pintarEnc(){
   $('faltan').innerHTML=filas.length
     ? '<strong>Cobertura de los encargos</strong>'
       +'<div class="tbl"><table class="cob"><thead><tr><th class="l">Producto</th><th title="Unidades encargadas pendientes">Enc.</th><th>Stock</th><th title="En pedidos pendientes de recibir">Llega</th><th>Falta</th></tr></thead><tbody>'
-      +filas.map(({p,x,f})=>'<tr><td class="l"><span class="ref">'+esc(p.ref)+'</span> '+esc(p.nombre)+'</td><td>'+x.encP+'</td><td>'+n(p.stock)+'</td><td>'+(x.pend||'·')+'</td><td>'+(f>0?'<span class="fl">'+f+'</span>':'<span class="ok">✓</span>')+'</td></tr>').join('')
+      +filas.map(({p,x,f})=>'<tr data-ref="'+esc(p.ref)+'"><td class="l"><span class="ref">'+esc(p.ref)+'</span> '+esc(p.nombre)+'</td><td>'+x.encP+'</td><td>'+n(p.stock)+'</td><td>'+(x.pend||'·')+'</td><td>'+(f>0?'<span class="fl">'+f+'</span>':'<span class="ok">✓</span>')+'</td></tr>').join('')
       +'</tbody></table></div>'
       +(nec.length?'<div><button class="btn" id="pedirFalt" type="button"'+(ocupado?' disabled':'')+'>Pedir lo que falta ('+totF+' ud'+(totF===1?'':'s')+')</button></div>'
         :'<span class="small">Todo lo encargado está cubierto por el stock y los pedidos por llegar.</span>')
@@ -681,12 +707,13 @@ function cardPed(pd){
 }
 function pintarPed(){
   const ok=conectado&&G;
-  if(!ok){ $('peds').innerHTML='<div class="empty">Conecta en Ajustes para ver los pedidos.</div>'; return; }
+  if(!ok){ $('peds').innerHTML='<div class="empty">Conecta en Ajustes para ver los pedidos.</div>'; $('pedsRec').innerHTML=''; return; }
   COB=cobertura();
   const L=G.pedidos.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
   const pend=L.filter(pd=>pd.estado!=='recibido'), rec=L.filter(pd=>pd.estado==='recibido');
-  $('peds').innerHTML=(pend.length?pend.map(cardPed).join(''):'<p class="small" style="margin:0">No hay pedidos por llegar.</p>')
-    +(rec.length?'<details><summary>Recibidos ('+rec.length+')</summary><div class="cards" style="margin-top:8px">'+rec.map(cardPed).join('')+'</div></details>':'');
+  $('peds').innerHTML=pend.length?pend.map(cardPed).join(''):'<p class="small" style="margin:0">No hay pedidos por llegar.</p>';
+  $('pedsRec').innerHTML=rec.length?'<details><summary>Recibidos ('+rec.length+')</summary><div class="cards" style="margin-top:8px">'+rec.map(cardPed).join('')+'</div></details>':'';
+  alinearTablas();
 }
 function pintarVen(){
   if(!(conectado&&G)){ $('tVen').innerHTML='<p class="note" style="padding:12px">Conecta en Ajustes para ver las ventas.</p>'; return; }
@@ -846,7 +873,7 @@ document.addEventListener('click',async ev=>{
   if(b.id==='pedirFalt'){ const R=calc(); $('pLineas').innerHTML=''; for(const p of stock.productos){ const x=R.porRef[p.ref]; const f=x.encP-n(p.stock)-x.pend; if(f>0) addLinea(p.ref,f); }
     $('pNom').value='Pedido para encargos'; setTab('enc'); $('dPed').open=true; totPed(); $('fPed').scrollIntoView({behavior:'smooth',block:'center'}); return; }
   if(b.id==='pAdd'){ addLinea(); return; }
-  if(b.classList.contains('x')){ b.closest('.line').remove(); totPed(); return; }
+  if(b.classList.contains('x')&&b.closest('#pLineas .line')){ b.closest('.line').remove(); totPed(); return; }
 });
 
 /* --- formulario de encargo --- */
@@ -979,7 +1006,7 @@ $('nProbar').onclick=async()=>{ const canal=$('nCanal').value.trim(); if(!canal)
 $('nCopiar').onclick=async()=>{ try{ await navigator.clipboard.writeText($('nCanal').value.trim()); toast('Canal copiado'); }catch(e){ toast('Cópialo a mano'); } };
 
 /* ========== pestañas y arranque ========== */
-function setTab(t){ tab=t; document.body.classList.toggle('ancho',t==='enc'); for(const k of ['panel','stock','enc','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
+function setTab(t){ tab=t; document.body.classList.toggle('ancho',t==='enc'); if(t==='enc') alinearTablas(); for(const k of ['panel','stock','enc','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
 leerCfg(); const recienConfigurado=leerEnlaceConfig(); rellenarForm(); $('pFec').value=hoy();
 if(cfg.modo==='vendedor'){ document.body.classList.add('vendedor'); document.querySelector('.eyebrow').textContent='Venta solidaria · 4.º ESO'; setTab('vend'); }
 // Desde «Acceso administradores» (?admin) un móvil en modo vendedor puede pasar a gestión completa con la contraseña

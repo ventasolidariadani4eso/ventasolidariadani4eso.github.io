@@ -64,7 +64,8 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
       entregar el pedido completo de un cliente de una vez (solo si hay stock para todo).
     Buscador por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto, nota y si está
     pagado). *Reabrir* en «Entregados y cancelados».
-  - *Pedidos al proveedor*: tabla **Cobertura de los encargos** (encargado · stock · llega · falta, por producto) y botón
+  - *Pedidos al proveedor*: arriba los pedidos por llegar y debajo la tabla **Cobertura de los encargos**, alineada
+    fila a fila con la tabla de encargos (en ordenador cada colonia queda a la misma altura en las dos columnas) (encargado · stock · llega · falta, por producto) y botón
     *Pedir lo que falta*, que prepara el pedido con esas unidades. *Nuevo pedido* plegado para pedir stock suelto.
     Cada pedido por llegar tiene su color y dice qué encargos cubre; *Marcar recibido* (suma las unidades al stock y a la web pública) y los recibidos plegados.
 - **Ventas**: lista con importe y beneficio; *Anular* devuelve las unidades al stock.
