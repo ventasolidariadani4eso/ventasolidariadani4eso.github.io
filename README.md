@@ -53,11 +53,18 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
   y beneficio previsto; tablas por categoría y por producto (avisa con ≠ si el stock no cuadra).
 - **Stock**: *Vender 1* (descuenta y apunta la venta), *Encargo* (abre el formulario con el producto),
   *Stock − / +* solo para corregir recuentos, *Muestra*.
-- **Encargos**: cliente, contacto, nota y si está pagado. *Entregar* lo convierte en venta y descuenta stock;
-  *Cancelar* / *Reabrir*. Indica qué hay que pedir para cubrir los encargos y prepara el pedido.
+- **Encargos**: tarjetas compactas **agrupadas por cliente** (3 por fila en ordenador), cada una con sus unidades,
+  total y lo que debe. Buscador por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto,
+  nota y si está pagado). Por línea: *Pagado/Sin pagar*, *Entregar* (lo convierte en venta y descuenta stock) y ✕
+  para cancelar; *Entregar todo* entrega el pedido completo de un cliente de una vez (solo si hay stock para todo).
+  *Reabrir* en «Entregados y cancelados». Indica qué hay que pedir para cubrir los encargos y prepara el pedido.
 - **Pedidos**: pedidos al proveedor con su coste. *Marcar recibido* suma las unidades al stock (y a la web pública).
 - **Ventas**: lista con importe y beneficio; *Anular* devuelve las unidades al stock.
 - **Ajustes**: conexión, costes por unidad, exportar / importar copia y actividad reciente.
+
+**Pantalla «solo vender»** (móvil del vendedor): productos con stock y botón *Vendido*; justo debajo, «Vendido hoy»
+(siempre visible) con *Anular* para corregir un error del mismo día; después *Apuntar un pedido* y los pedidos
+pendientes. Una venta de otro día se anula desde *Ventas* en la gestión completa.
 
 Los botones que borran o deshacen piden una segunda pulsación para confirmar.
 

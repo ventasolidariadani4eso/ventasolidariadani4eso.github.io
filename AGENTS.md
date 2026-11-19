@@ -78,8 +78,27 @@ Precio y coste se guardan en cada venta.
      pasa a gestión completa.
   3. **QR / enlace** `admin.html#cfg=<base64url(JSON {o,r,t,k,m})>` generado en *Ajustes → Configurar otro móvil*
      («solo vender» o «gestión completa»). Contiene secretos: solo en persona.
-- **Modo vendedor** (móvil del alumno): solo productos con stock y botón *Vendido*; formulario *Apuntar un pedido* con
-  destinatario obligatorio; lista de pedidos pendientes; sin cifras económicas. No pide contraseña.
+- **Modo vendedor** (móvil del alumno): solo productos con stock y botón *Vendido*; justo debajo, el bloque
+  **«Vendido hoy»** (`#vendHoy`), **siempre visible** (sin ventas muestra un aviso), con un botón *Anular* por cada venta
+  del día (`fecha === hoy()`); las de días anteriores solo se anulan desde *Ventas* en gestión completa. Después,
+  formulario *Apuntar un pedido* con destinatario obligatorio y lista de pedidos pendientes; sin cifras económicas.
+  No pide contraseña. Lo pinta `pintarVend()`.
+- **Pestaña Encargos** (`pintarEnc()`, `filaEnc()`):
+  - Formulario *Nuevo encargo* plegado en `<details id="dEnc">`; se abre solo al venir del botón *Encargo* de Stock.
+  - Buscador `#encQ` (cliente, contacto, nota, ref, nombre, marca). Si coincide algún encargo de un cliente, se muestra
+    **el pedido completo** de ese cliente. Al lado, resumen: clientes · uds · € · sin cobrar.
+  - Pendientes **agrupados por cliente** con `claveCli()` (sin distinguir mayúsculas, tildes ni espacios: «María» =
+    «maria »). Los encargos sin nombre van juntos al final («Sin nombre»). Grupos ordenados por su encargo más antiguo.
+  - Cada grupo es una **tarjeta compacta** en cuadrícula CSS (`#encPend`, `repeat(auto-fill,minmax(270px,1fr))`:
+    3 por fila en ordenador, 2 en tablet, 1 en móvil). Cabecera: nombre, contactos, uds · €, insignia
+    *Pagado* / *Debe X €* / *Debe X € de Y €*. Cada línea: ref, producto, × cant, importe; debajo fecha (dd/mm), nota,
+    «falta N» y botones *Sin pagar/Pagado*, *Entregar*, ✕ (cancelar, doble pulsación).
+  - **Entregar todo** (cabecera, solo si el cliente tiene más de un encargo; `data-encg="entregar"`, `data-ids`):
+    doble pulsación; entrega en un único `guardar()` todos los pendientes del cliente (una venta por línea, descuenta
+    stock, marca pagado). Se deshabilita si el stock no alcanza para todo (suma por `ref`); nunca entrega a medias.
+    El log/aviso usa el prefijo `Encargo entregado: ` para que `avisarSiToca()` lo notifique.
+  - El recuadro «Para cubrir los encargos hay que pedir» solo aparece si falta algo. Historial (entregados y
+    cancelados) en lista compacta con *Reabrir*.
 - **Guardado**: `guardar(desc, fn)` → `fn(stockCopia, gestionCopia)` modifica copias y devuelve `true` si tocó el stock;
   se escribe `stock.json` (si procede) y luego `ventas.enc.json`; ante 409/422 recarga y reintenta una vez. Errores
   visibles con *toast* (401/403 → «este dispositivo no tiene permiso… QR nuevo»). Validaciones con `fallo('mensaje')`.
@@ -101,6 +120,10 @@ Precio y coste se guardan en cada venta.
 5. Si cambia la estructura de la gestión, subir `v` y migrar en `normalizar()` (ya migra desde v1).
 6. Probar en local con `python -m http.server 8000`. Para `admin.html`, simular `https://api.github.com/**` y
    `https://ntfy.sh/**` (p. ej. Playwright con almacén en memoria) en vez de usar el repo real.
+   Atajo para probar la interfaz sin conexión ni clave: tras cargar la página, en la consola (o `page.evaluate`):
+   `G = {encargos:[…], ventas:[], pedidos:[], log:[], ajustes:{}, costes:{}}; conectado = true;
+   escribir = async () => 'sha'; cifrar = async () => ({}); pintarTodo(); setTab('enc');`
+   Así se pueden pulsar botones sin escribir nada en GitHub. Probar en anchos ~1000, ~700 y ~390 px.
 7. Despliegue (PowerShell):
    `cd "$HOME\Documents\venta-solidaria-4eso"; git pull --rebase origin main; git add <archivos>; git commit -m "…"; git push`
    Pages tarda 1–2 min. Comprobar en la web con recarga forzada.
@@ -113,5 +136,7 @@ Precio y coste se guardan en cada venta.
 - Token nuevo de la organización en uso; los tokens antiguos deben borrarse. El móvil del alumno debe tener el QR
   generado con el token nuevo.
 - Avisos ntfy activos y probados.
+- Cambios de interfaz 14–19/11/2026: modo vendedor con «Vendido hoy» siempre visible y *Anular*; Encargos agrupados
+  por cliente en tarjetas compactas (3 por fila), buscador y *Entregar todo* (ver «Cómo funciona `admin.html`»).
 - Pendiente/ideas: renovar el token antes de que caduque; exportar copia de seguridad semanal; al terminar la venta,
   exportar copia final y desactivar Pages o archivar el repo.
