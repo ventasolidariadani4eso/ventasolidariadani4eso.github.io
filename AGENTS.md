@@ -96,8 +96,12 @@ Precio y coste se guardan en cada venta.
       (`fPed`, `pNom`, `pFec`, `pLineas`, `pAdd`, `pTot`).
     - `#peds` (`pintarPed()`, `cardPed()`): primero los pedidos **por llegar** (*Marcar recibido*, *Eliminar*);
       los recibidos plegados en «Recibidos (N)» con *Deshacer recepción*.
-  - En cada encargo sin stock: «falta N» si no está cubierto, o «llega en pedido» si un pedido pendiente lo cubre
-    (se calcula por producto con `Rcob = calc()`, que se hace una vez en `pintarEnc()`).
+  - **Colores pedido ↔ encargo** (`cobertura()`, `chipPed()`, variable `COB`): cada pedido por llegar recibe un color
+    (`COLORES_PED`, por orden de fecha) y su tarjeta lleva borde y ✓ de ese color y la línea «Cubre encargos de:
+    clientes (uds)». `cobertura()` reparte por producto las unidades entre los encargos pendientes, del más antiguo al
+    más reciente: primero el stock y luego cada pedido por llegar, del más antiguo al más nuevo. Cada encargo que
+    recibe unidades de un pedido muestra un ✓ con el nombre y color de ese pedido (puede tener varios); lo que no
+    cubren ni el stock ni los pedidos aparece como «falta N». Es solo visual: no se guarda nada en los datos.
 - **Columna de encargos** (`pintarEnc()`, `filaEnc()`):
   - Formulario *Nuevo encargo* plegado en `<details id="dEnc">`; se abre solo al venir del botón *Encargo* de Stock.
   - Buscador `#encQ` (cliente, contacto, nota, ref, nombre, marca). Si coincide algún encargo de un cliente, se muestra

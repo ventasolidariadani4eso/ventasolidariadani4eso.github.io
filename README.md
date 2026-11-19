@@ -59,10 +59,11 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
     por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto, nota y si está pagado).
     Por línea: *Pagado/Sin pagar*, *Entregar* (lo convierte en venta y descuenta stock) y ✕ para cancelar;
     *Entregar todo* entrega el pedido completo de un cliente de una vez (solo si hay stock para todo).
-    Si falta stock, cada línea dice «falta N» o «llega en pedido». *Reabrir* en «Entregados y cancelados».
+    Si falta stock, cada línea lleva un ✓ del **color del pedido** que lo trae (el mismo color que la tarjeta de ese
+    pedido a la derecha) o «falta N» si aún no está pedido. *Reabrir* en «Entregados y cancelados».
   - *Pedidos al proveedor*: tabla **Cobertura de los encargos** (encargado · stock · llega · falta, por producto) y botón
     *Pedir lo que falta*, que prepara el pedido con esas unidades. *Nuevo pedido* plegado para pedir stock suelto.
-    Pedidos por llegar con *Marcar recibido* (suma las unidades al stock y a la web pública) y los recibidos plegados.
+    Cada pedido por llegar tiene su color y dice qué encargos cubre; *Marcar recibido* (suma las unidades al stock y a la web pública) y los recibidos plegados.
 - **Ventas**: lista con importe y beneficio; *Anular* devuelve las unidades al stock.
 - **Ajustes**: conexión, costes por unidad, exportar / importar copia y actividad reciente.
 

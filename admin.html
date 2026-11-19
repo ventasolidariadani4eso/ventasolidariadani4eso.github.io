@@ -126,6 +126,10 @@ body.ancho .wrap{max-width:1360px}
 .colPed .line .x{width:36px;height:36px}
 .colPed .grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .erow .enp{color:var(--ok)}
+/* Color de cada pedido por llegar y de los encargos que cubre */
+.pc{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:600;color:#fff;background:var(--pc);border-radius:999px;padding:1px 8px;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;line-height:1.5}
+.card.pedc{border-left:6px solid var(--pc)}
+.pedc .cubre{font-size:12.5px;color:var(--fg)}
 </style>
 </head>
 <body>
@@ -515,12 +519,34 @@ function filaEnc(e,hist){
   const mt=[hist?fmtF(e.fecha):String(fmtF(e.fecha)).slice(0,5)];
   if(hist){ if(e.cliente) mt.push('<strong>'+esc(e.cliente)+'</strong>'); mt.push(e.estado==='entregado'?'Entregado '+fmtF(e.fechaEntrega):'Cancelado'); }
   if(e.nota) mt.push(esc(e.nota));
-  if(!hist&&falta){ const x=Rcob&&Rcob.porRef[e.ref]; const sinCubrir=x?x.encP-n(x.stock)-x.pend:falta;
-    mt.push(sinCubrir>0?'<span class="warn">falta '+falta+'</span>':'<span class="enp">llega en pedido</span>'); }
+  if(!hist){ const c=COB&&COB.porEnc[e.id];
+    if(c){ for(const id of c.peds) mt.push(chipPed(id)); if(c.falta>0) mt.push('<span class="warn">falta '+c.falta+'</span>'); }
+    else if(falta) mt.push('<span class="warn">falta '+falta+'</span>'); }
   return '<div class="erow"><div class="line1"><span class="ref">'+esc(e.ref)+'</span><span class="nm">'+esc(p?p.nombre:e.ref)+'</span><span class="q">× '+n(e.cant)+'</span><span class="imp">'+eur0(imp)+'</span></div>'
     +'<div class="l2"><span class="mt">'+mt.join(' · ')+'</span><div class="acc">'+acc+'</div></div></div>';
 }
-let encQ='', Rcob=null;
+let encQ='', Rcob=null, COB=null;
+const COLORES_PED=['#2563c9','#8b3fb3','#0f8a6c','#c2570c','#c0266d','#5b6b17','#0e7490','#7c4a2d'];
+/* Reparte por producto las unidades disponibles entre los encargos pendientes (los más antiguos primero):
+   primero el stock y después cada pedido por llegar, del más antiguo al más reciente.
+   Devuelve { porEnc: {idEncargo: {peds:[idPedido], falta}}, porPed: {idPedido: {color, n, clientes:{nombre:uds}}} } */
+function cobertura(){
+  const porEnc={}, porPed={}; if(!G||!stock) return {porEnc,porPed};
+  const peds=G.pedidos.filter(pd=>pd.estado!=='recibido').sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))||String(a.id).localeCompare(String(b.id)));
+  peds.forEach((pd,i)=>porPed[pd.id]={color:COLORES_PED[i%COLORES_PED.length],n:i+1,clientes:{}});
+  const encs=G.encargos.filter(e=>e.estado==='pendiente').sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))||String(a.id).localeCompare(String(b.id)));
+  const fuentes={};
+  const cola=ref=>{ if(fuentes[ref]) return fuentes[ref]; const q=[{id:null,u:n(prod(ref)?.stock)}];
+    for(const pd of peds){ const u=pd.lineas.filter(l=>l.ref===ref).reduce((a,l)=>a+n(l.cant),0); if(u>0) q.push({id:pd.id,u}); }
+    return fuentes[ref]=q; };
+  for(const e of encs){ let need=n(e.cant); const r={peds:[],falta:0};
+    for(const f of cola(e.ref)){ if(!need) break; if(f.u<=0) continue; const t=Math.min(need,f.u); f.u-=t; need-=t;
+      if(f.id){ if(!r.peds.includes(f.id)) r.peds.push(f.id); const k=String(e.cliente||'').trim()||'Sin nombre'; const c=porPed[f.id].clientes; c[k]=(c[k]||0)+t; } }
+    r.falta=need; porEnc[e.id]=r; }
+  return {porEnc,porPed};
+}
+function chipPed(id){ const pd=G.pedidos.find(x=>x.id===id), c=COB&&COB.porPed[id]; if(!pd||!c) return '';
+  return '<span class="pc" style="--pc:'+c.color+'" title="Llega en «'+esc(pd.nombre||'Pedido')+'» ('+fmtF(pd.fecha)+')">✓ '+esc(pd.nombre||'Pedido')+'</span>'; }
 function coincideEnc(e){
   if(!encQ) return true; const p=prod(e.ref);
   return claveCli([e.cliente,e.contacto,e.nota,e.ref,p?.nombre,p?.marca].join(' ')).includes(encQ);
@@ -528,7 +554,7 @@ function coincideEnc(e){
 function pintarEnc(){
   const ok=conectado&&G;
   $('eProd').innerHTML=opcionesProd($('eProd').value);
-  Rcob=ok?calc():null;
+  Rcob=ok?calc():null; COB=ok?cobertura():null;
   if(!ok){ $('encPend').innerHTML='<div class="empty">Conecta en Ajustes para gestionar encargos.</div>'; $('encHist').innerHTML=''; $('faltan').hidden=true; $('encRes').textContent=''; return; }
   const todosPend=G.encargos.filter(e=>e.estado==='pendiente');
   // Si la búsqueda coincide con algún encargo de un cliente, se muestra su pedido completo
@@ -573,9 +599,11 @@ function pintarEnc(){
 $('encQ').addEventListener('input',ev=>{ encQ=claveCli(ev.target.value); pintarEnc(); });
 function cardPed(pd){
   const off=ocupado; let u=0,c=0,v=0; for(const l of pd.lineas){ u+=n(l.cant); c+=n(l.cant)*Number(l.coste||0); v+=n(l.cant)*precio(l.ref); }
-  const rec=pd.estado==='recibido';
-  return '<div class="card"><div class="top"><span class="tt">'+esc(pd.nombre||'Pedido')+'</span><span class="badge '+(rec?'on':'off')+'">'+(rec?'Recibido '+fmtF(pd.fechaRecibido):'Por llegar')+'</span></div>'
+  const rec=pd.estado==='recibido', cb=!rec&&COB&&COB.porPed[pd.id];
+  const cl=cb?Object.entries(cb.clientes):[];
+  return '<div class="card'+(cb?' pedc" style="--pc:'+cb.color:'')+'"><div class="top"><span class="tt">'+(cb?'<span class="pc" style="--pc:'+cb.color+'">✓</span> ':'')+esc(pd.nombre||'Pedido')+'</span><span class="badge '+(rec?'on':'off')+'">'+(rec?'Recibido '+fmtF(pd.fechaRecibido):'Por llegar')+'</span></div>'
     +'<div class="small">'+fmtF(pd.fecha)+' · '+u+' uds · coste '+eur(c)+' · venta '+eur(v)+'</div>'
+    +(cb?'<div class="cubre">'+(cl.length?'Cubre encargos de: '+cl.map(([k,x])=>'<strong>'+esc(k)+'</strong>'+(x>1?' ('+x+')':'')).join(', '):'No cubre encargos (stock para vender)')+'</div>':'')
     +'<details><summary>Ver líneas</summary><div class="tbl"><table class="cob"><thead><tr><th class="l">Producto</th><th>Uds</th><th>Coste/ud</th><th>Total</th></tr></thead><tbody>'
     +pd.lineas.map(l=>'<tr><td class="l">'+esc(nom(l.ref))+'</td><td>'+n(l.cant)+'</td><td>'+eur(Number(l.coste||0))+'</td><td>'+eur(n(l.cant)*Number(l.coste||0))+'</td></tr>').join('')+'</tbody></table></div></details>'
     +'<div class="row2">'+(rec
@@ -586,6 +614,7 @@ function cardPed(pd){
 function pintarPed(){
   const ok=conectado&&G;
   if(!ok){ $('peds').innerHTML='<div class="empty">Conecta en Ajustes para ver los pedidos.</div>'; return; }
+  COB=cobertura();
   const L=G.pedidos.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
   const pend=L.filter(pd=>pd.estado!=='recibido'), rec=L.filter(pd=>pd.estado==='recibido');
   $('peds').innerHTML=(pend.length?pend.map(cardPed).join(''):'<p class="small" style="margin:0">No hay pedidos por llegar.</p>')
