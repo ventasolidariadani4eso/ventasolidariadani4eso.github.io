@@ -102,7 +102,19 @@ Precio y coste se guardan en cada venta.
     más reciente: primero el stock y luego cada pedido por llegar, del más antiguo al más nuevo. Cada encargo que
     recibe unidades de un pedido muestra un ✓ con el nombre y color de ese pedido (puede tener varios); lo que no
     cubren ni el stock ni los pedidos aparece como «falta N». Es solo visual: no se guarda nada en los datos.
-- **Columna de encargos** (`pintarEnc()`, `filaEnc()`):
+- **Columna de encargos** (`pintarEnc()`, `filaEnc()`): mismo contenedor y estilo que la de pedidos (`.colEnc`, fondo
+  `--chip`, caja blanca, tabla `.cob`). Selector **Por producto / Por cliente** (`data-emodo`, variable `encModo`,
+  recordado en `localStorage['vs4eso.encModo']`; por defecto *Por producto*).
+  - **Por producto** (`pintarEncProd()`, `chipEnc()`): tabla `.encT` con una fila por producto con encargos
+    pendientes (mismo orden que la tabla de cobertura: primero lo que falta). Columnas: *Producto* (ref, nombre y
+    «N encargadas · stock · llegan»), *Encargos* y *Falta*. En *Encargos* cada encargo es una etiqueta con el cliente
+    y las unidades, según de dónde salen (reparto de `cobertura()`, que guarda `partes:[{id|null,u}]`):
+    verde con ● = stock; relleno del color del pedido con ✓ = llega en ese pedido; discontinua naranja = falta pedir.
+    «€» = pagado. Un encargo repartido entre varias fuentes sale en varias etiquetas. Encima, leyenda con los colores.
+    Al pulsar una etiqueta (`data-encsel`, variable `encSel`) se abre debajo de esa fila una ficha con *Pagado*,
+    *Entregar*, ✕ y «Ver su pedido completo» (`data-ecli`: pasa a *Por cliente* filtrando por ese cliente).
+  - **Por cliente**: las tarjetas por cliente descritas a continuación (con *Entregar todo*), en cuadrícula
+    `#encPend.porCli`.
   - Formulario *Nuevo encargo* plegado en `<details id="dEnc">`; se abre solo al venir del botón *Encargo* de Stock.
   - Buscador `#encQ` (cliente, contacto, nota, ref, nombre, marca). Si coincide algún encargo de un cliente, se muestra
     **el pedido completo** de ese cliente. Al lado, resumen: clientes · uds · € · sin cobrar.

@@ -55,12 +55,15 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
   *Stock − / +* solo para corregir recuentos, *Muestra*.
 - **Encargos y pedidos** (una sola pestaña, en paralelo: encargos a la izquierda y pedidos al proveedor a la derecha;
   en el móvil, uno debajo de otro):
-  - *Encargos*: tarjetas compactas **agrupadas por cliente**, cada una con sus unidades, total y lo que debe. Buscador
-    por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto, nota y si está pagado).
-    Por línea: *Pagado/Sin pagar*, *Entregar* (lo convierte en venta y descuenta stock) y ✕ para cancelar;
-    *Entregar todo* entrega el pedido completo de un cliente de una vez (solo si hay stock para todo).
-    Si falta stock, cada línea lleva un ✓ del **color del pedido** que lo trae (el mismo color que la tarjeta de ese
-    pedido a la derecha) o «falta N» si aún no está pedido. *Reabrir* en «Entregados y cancelados».
+  - *Encargos*, con dos vistas:
+    - **Por producto** (por defecto): una fila por producto y, en la misma línea, cada encargo como una etiqueta con
+      el nombre del cliente: verde ● si sale del stock, del **color del pedido** con ✓ si llega en ese pedido (el
+      mismo color que su tarjeta a la derecha) y naranja discontinua si falta pedirlo. Pulsando un nombre se abre
+      su ficha con *Pagado/Sin pagar*, *Entregar*, ✕ (cancelar) y «Ver su pedido completo».
+    - **Por cliente**: tarjetas agrupadas por cliente con sus unidades, total y lo que debe, y *Entregar todo* para
+      entregar el pedido completo de un cliente de una vez (solo si hay stock para todo).
+    Buscador por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto, nota y si está
+    pagado). *Reabrir* en «Entregados y cancelados».
   - *Pedidos al proveedor*: tabla **Cobertura de los encargos** (encargado · stock · llega · falta, por producto) y botón
     *Pedir lo que falta*, que prepara el pedido con esas unidades. *Nuevo pedido* plegado para pedir stock suelto.
     Cada pedido por llegar tiene su color y dice qué encargos cubre; *Marcar recibido* (suma las unidades al stock y a la web pública) y los recibidos plegados.
