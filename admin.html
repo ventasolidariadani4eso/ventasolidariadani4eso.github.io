@@ -69,6 +69,8 @@ body.login nav.tabs{display:none}
 .ehead{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap;padding:8px 12px;background:var(--chip)}
 .ehead .who{font-weight:600;font-size:15px}
 .ehead .ct{font-size:12.5px;color:var(--muted);margin-left:6px}
+.ehead .todo{min-height:32px;padding:0 10px;font-size:12.5px}
+.ehead .todo[data-armado]{background:var(--fg);color:var(--bg)}
 .ehead .tot{font-size:13px;font-variant-numeric:tabular-nums;display:flex;gap:8px;align-items:center;white-space:nowrap}
 .erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 12px;border-top:1px solid var(--line)}
 .erow:first-of-type{border-top:0}
@@ -485,7 +487,9 @@ function pintarEnc(){
   $('eProd').innerHTML=opcionesProd($('eProd').value);
   if(!ok){ $('encPend').innerHTML='<div class="empty">Conecta en Ajustes para gestionar encargos.</div>'; $('encHist').innerHTML=''; $('faltan').hidden=true; $('encRes').textContent=''; return; }
   const todosPend=G.encargos.filter(e=>e.estado==='pendiente');
-  const pend=todosPend.filter(coincideEnc).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  // Si la búsqueda coincide con algún encargo de un cliente, se muestra su pedido completo
+  const cliOk=new Set(todosPend.filter(coincideEnc).map(e=>claveCli(e.cliente)));
+  const pend=todosPend.filter(e=>cliOk.has(claveCli(e.cliente))).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
   // Agrupar por cliente (sin distinguir mayúsculas, tildes ni espacios)
   const grupos=new Map();
   for(const e of pend){ const k=claveCli(e.cliente); if(!grupos.has(k)) grupos.set(k,{nombre:String(e.cliente||'').trim(),items:[]}); grupos.get(k).items.push(e); }
@@ -495,9 +499,13 @@ function pintarEnc(){
     let u=0,eur=0,deb=0; const cts=[];
     for(const e of g.items){ const imp=n(e.cant)*precio(e.ref); u+=n(e.cant); eur+=imp; if(!e.pagado) deb+=imp; const c=String(e.contacto||'').trim(); if(c&&!cts.includes(c)) cts.push(c); }
     tU+=u; tE+=eur; tD+=deb;
+    const nec={}; for(const e of g.items) nec[e.ref]=(nec[e.ref]||0)+n(e.cant);
+    const faltaG=Object.keys(nec).some(r=>nec[r]>n(prod(r)?.stock)), offG=!conectado||ocupado;
+    const todo=g.items.length>1?'<button class="btn todo" data-encg="entregar" data-ids="'+esc(g.items.map(e=>e.id).join(','))+'" data-confirm="1"'
+      +(faltaG?' title="Falta stock para entregarlo todo"':'')+(faltaG||offG?' disabled':'')+'>Entregar todo</button>':'';
     const est=deb===0?'<span class="badge on">Pagado</span>':deb===eur?'<span class="badge off">Debe '+eur0(deb)+'</span>':'<span class="badge off">Debe '+eur0(deb)+' de '+eur0(eur)+'</span>';
     return '<div class="egrp"><div class="ehead"><div><span class="who">'+(g.nombre?esc(g.nombre):'<em>Sin nombre</em>')+'</span>'+(cts.length?'<span class="ct">'+esc(cts.join(' · '))+'</span>':'')+'</div>'
-      +'<div class="tot"><span>'+u+' ud'+(u===1?'':'s')+' · '+eur0(eur)+'</span>'+est+'</div></div>'
+      +'<div class="tot"><span>'+u+' ud'+(u===1?'':'s')+' · '+eur0(eur)+'</span>'+est+todo+'</div></div>'
       +g.items.map(e=>filaEnc(e,false)).join('')+'</div>';
   }).join(''):'<div class="empty">'+(encQ&&todosPend.length?'Ningún encargo pendiente coincide con la búsqueda.':'No hay encargos pendientes.')+'</div>';
   $('encRes').textContent=pend.length?L.length+' cliente'+(L.length===1?'':'s')+' · '+tU+' uds · '+eur0(tE)+(tD?' · sin cobrar '+eur0(tD):''):'';
@@ -645,6 +653,20 @@ document.addEventListener('click',async ev=>{
   if(a==='muestra'){ const v=!prod(ref)?.muestra;
     await guardar((v?'Con muestra: ':'Sin muestra: ')+nom(ref),(s)=>{ pS(s,ref).muestra=v; return true; }); return; }
   if(a==='encargar'){ setTab('enc'); $('dEnc').open=true; $('eProd').value=ref; $('eCant').value=1; $('eCli').focus(); return; }
+  if(b.dataset.encg==='entregar'){ const ids=String(b.dataset.ids||'').split(',').filter(Boolean);
+    const L0=ids.map(x=>G.encargos.find(e=>e.id===x)).filter(e=>e&&e.estado==='pendiente'); if(!L0.length) return;
+    const f=hoy(), cli=String(L0[0].cliente||'').trim()||'Sin nombre', uds=L0.reduce((a,e)=>a+n(e.cant),0), tot=L0.reduce((a,e)=>a+n(e.cant)*precio(e.ref),0);
+    const vids=L0.map(()=>uid());
+    if(await guardar('Encargo entregado: '+cli+' · '+L0.length+' productos, '+uds+' uds · '+tot+' €',(s,g)=>{
+      const L=ids.map(x=>g.encargos.find(e=>e.id===x));
+      if(L.some(e=>!e||e.estado!=='pendiente')) fallo('Algún encargo de '+cli+' ya no está pendiente. Revisa la lista.');
+      const nec={}; for(const e of L) nec[e.ref]=(nec[e.ref]||0)+n(e.cant);
+      for(const r in nec){ const p=pS(s,r); if(n(p.stock)<nec[r]) fallo('No hay stock suficiente de '+p.nombre+' para entregarlo todo'); }
+      L.forEach((e,i)=>{ const p=pS(s,e.ref); p.stock=n(p.stock)-n(e.cant);
+        g.ventas.push({id:vids[i],fecha:f,ref:e.ref,cant:n(e.cant),precio:precio(e.ref),coste:coste(e.ref),origen:'encargo',encargo:e.id,cliente:e.cliente||'',nota:''});
+        e.estado='entregado'; e.fechaEntrega=f; e.venta=vids[i]; e.pagado=true; });
+      return true; })) toast('Entregado todo a '+cli+' · '+eur0(tot));
+    return; }
   if(b.dataset.enc){ const e0=G.encargos.find(x=>x.id===id); if(!e0) return; const k=b.dataset.enc, f=hoy(), vid=uid();
     if(k==='entregar') await guardar('Encargo entregado: '+nom(e0.ref)+' × '+e0.cant+' · '+(n(e0.cant)*precio(e0.ref))+' €'+(e0.cliente?' · '+e0.cliente:''),(s,g)=>{
       const e=g.encargos.find(x=>x.id===id); if(!e||e.estado!=='pendiente') fallo('Ese encargo ya no está pendiente');
