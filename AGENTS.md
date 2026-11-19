@@ -83,7 +83,22 @@ Precio y coste se guardan en cada venta.
   del día (`fecha === hoy()`); las de días anteriores solo se anulan desde *Ventas* en gestión completa. Después,
   formulario *Apuntar un pedido* con destinatario obligatorio y lista de pedidos pendientes; sin cifras económicas.
   No pide contraseña. Lo pinta `pintarVend()`.
-- **Pestaña Encargos** (`pintarEnc()`, `filaEnc()`):
+- **Pestañas**: Panel · Stock · **Encargos y pedidos** · Ventas · Ajustes. Desde el 19/11/2026 ya **no existe la pestaña
+  Pedidos**: está fusionada con Encargos en `#v-enc` para decidir los pedidos al proveedor viendo los encargos.
+  Al abrir esa pestaña, `setTab('enc')` añade `body.ancho` (la columna central pasa de 940 a 1360 px).
+- **Vista «Encargos y pedidos»** (`#v-enc`, rejilla `.encped`): dos columnas desde 1000 px (encargos ≈ 2/3 a la
+  izquierda, `aside.colPed` ≈ 1/3 a la derecha); en pantallas estrechas, una debajo de otra (primero encargos).
+  - Columna derecha **Pedidos al proveedor**:
+    - `#faltan` = tabla **Cobertura de los encargos**: por cada producto con encargos pendientes, *Enc.* (uds encargadas),
+      *Stock*, *Llega* (en pedidos sin recibir) y *Falta* = `encP − stock − pend` (✓ si está cubierto). Botón
+      **Pedir lo que falta (N uds)** (`#pedirFalt`): rellena el formulario de pedido con esas líneas y lo abre.
+    - Formulario *Nuevo pedido* plegado en `<details id="dPed">` (se pliega tras guardar). IDs de siempre
+      (`fPed`, `pNom`, `pFec`, `pLineas`, `pAdd`, `pTot`).
+    - `#peds` (`pintarPed()`, `cardPed()`): primero los pedidos **por llegar** (*Marcar recibido*, *Eliminar*);
+      los recibidos plegados en «Recibidos (N)» con *Deshacer recepción*.
+  - En cada encargo sin stock: «falta N» si no está cubierto, o «llega en pedido» si un pedido pendiente lo cubre
+    (se calcula por producto con `Rcob = calc()`, que se hace una vez en `pintarEnc()`).
+- **Columna de encargos** (`pintarEnc()`, `filaEnc()`):
   - Formulario *Nuevo encargo* plegado en `<details id="dEnc">`; se abre solo al venir del botón *Encargo* de Stock.
   - Buscador `#encQ` (cliente, contacto, nota, ref, nombre, marca). Si coincide algún encargo de un cliente, se muestra
     **el pedido completo** de ese cliente. Al lado, resumen: clientes · uds · € · sin cobrar.
@@ -97,8 +112,7 @@ Precio y coste se guardan en cada venta.
     doble pulsación; entrega en un único `guardar()` todos los pendientes del cliente (una venta por línea, descuenta
     stock, marca pagado). Se deshabilita si el stock no alcanza para todo (suma por `ref`); nunca entrega a medias.
     El log/aviso usa el prefijo `Encargo entregado: ` para que `avisarSiToca()` lo notifique.
-  - El recuadro «Para cubrir los encargos hay que pedir» solo aparece si falta algo. Historial (entregados y
-    cancelados) en lista compacta con *Reabrir*.
+  - Historial (entregados y cancelados) en lista compacta con *Reabrir*.
 - **Guardado**: `guardar(desc, fn)` → `fn(stockCopia, gestionCopia)` modifica copias y devuelve `true` si tocó el stock;
   se escribe `stock.json` (si procede) y luego `ventas.enc.json`; ante 409/422 recarga y reintenta una vez. Errores
   visibles con *toast* (401/403 → «este dispositivo no tiene permiso… QR nuevo»). Validaciones con `fallo('mensaje')`.
@@ -123,7 +137,7 @@ Precio y coste se guardan en cada venta.
    Atajo para probar la interfaz sin conexión ni clave: tras cargar la página, en la consola (o `page.evaluate`):
    `G = {encargos:[…], ventas:[], pedidos:[], log:[], ajustes:{}, costes:{}}; conectado = true;
    escribir = async () => 'sha'; cifrar = async () => ({}); pintarTodo(); setTab('enc');`
-   Así se pueden pulsar botones sin escribir nada en GitHub. Probar en anchos ~1000, ~700 y ~390 px.
+   Así se pueden pulsar botones sin escribir nada en GitHub. Probar en anchos ~1400, ~1000, ~700 y ~390 px.
 7. Despliegue (PowerShell):
    `cd "$HOME\Documents\venta-solidaria-4eso"; git pull --rebase origin main; git add <archivos>; git commit -m "…"; git push`
    Pages tarda 1–2 min. Comprobar en la web con recarga forzada.
@@ -131,12 +145,13 @@ Precio y coste se guardan en cada venta.
 ## Estado a 14/11/2026
 
 - Pedido inicial (23 uds, 167,50 €) recibido. Segundo pedido (19 uds, 134 €) **pendiente de recibir**: al llegar,
-  *Pedidos → Marcar recibido*. Confirmar si 137 Sauvage Elixir y 246 My Way traen muestra.
+  *Encargos y pedidos → Marcar recibido*. Confirmar si 137 Sauvage Elixir y 246 My Way traen muestra.
 - 8 unidades vendidas antes de la app (108 €), cargadas desde `privado/gestion-inicial-2026-11-13.json`.
 - Token nuevo de la organización en uso; los tokens antiguos deben borrarse. El móvil del alumno debe tener el QR
   generado con el token nuevo.
 - Avisos ntfy activos y probados.
 - Cambios de interfaz 14–19/11/2026: modo vendedor con «Vendido hoy» siempre visible y *Anular*; Encargos agrupados
-  por cliente en tarjetas compactas (3 por fila), buscador y *Entregar todo* (ver «Cómo funciona `admin.html`»).
+  por cliente en tarjetas compactas (3 por fila), buscador y *Entregar todo*; Encargos y Pedidos fusionados en una
+  sola pestaña a dos columnas con tabla de cobertura (ver «Cómo funciona `admin.html`»).
 - Pendiente/ideas: renovar el token antes de que caduque; exportar copia de seguridad semanal; al terminar la venta,
   exportar copia final y desactivar Pages o archivar el repo.

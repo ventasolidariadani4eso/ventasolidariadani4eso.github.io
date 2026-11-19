@@ -104,7 +104,28 @@ body.login nav.tabs{display:none}
 #encPend .erow .btn,#encPend .erow .mtg{min-height:30px;padding:0 9px;font-size:12.5px}
 #encPend .erow .x{width:30px;height:30px;font-size:13px}
 #encPend .ehead .todo{min-height:28px;padding:0 8px;font-size:12px}
-#faltan{padding:8px 12px;gap:4px}
+#faltan{padding:10px 12px;gap:6px}
+/* Vista combinada Encargos y pedidos: dos columnas en pantallas anchas */
+body.ancho .wrap{max-width:1360px}
+.encped{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+@media (min-width:1000px){.encped{grid-template-columns:minmax(0,1.7fr) minmax(330px,1fr)}}
+.colEnc,.colPed{display:flex;flex-direction:column;gap:12px;min-width:0}
+.colPed{background:var(--chip);border-radius:12px;padding:12px}
+.colPed #faltan{background:var(--surface);border:1px solid var(--line)}
+.colh{font-family:var(--display);font-size:22px;margin:0}
+.cob{width:100%;font-size:13px}
+.cob th,.cob td{padding:4px 5px}
+.cob th{text-transform:none;letter-spacing:0;font-size:11.5px}
+.cob td:not(.l),.cob th:not(.l){width:1%}
+.cob td.l{white-space:normal}
+.cob .ok{color:var(--ok);font-weight:600}
+.cob .fl{color:var(--warn);font-weight:700}
+.colPed .card{padding:10px 12px;gap:6px}
+.colPed .card .btn{min-height:34px;font-size:13px}
+.colPed .line{grid-template-columns:minmax(0,1fr) 64px 72px 36px}
+.colPed .line .x{width:36px;height:36px}
+.colPed .grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.erow .enp{color:var(--ok)}
 </style>
 </head>
 <body>
@@ -132,8 +153,7 @@ body.login nav.tabs{display:none}
   <nav class="tabs" role="tablist">
     <button role="tab" id="tab-panel" aria-selected="true" data-tab="panel">Panel</button>
     <button role="tab" id="tab-stock" aria-selected="false" data-tab="stock">Stock</button>
-    <button role="tab" id="tab-enc" aria-selected="false" data-tab="enc">Encargos</button>
-    <button role="tab" id="tab-ped" aria-selected="false" data-tab="ped">Pedidos</button>
+    <button role="tab" id="tab-enc" aria-selected="false" data-tab="enc">Encargos y pedidos</button>
     <button role="tab" id="tab-ven" aria-selected="false" data-tab="ven">Ventas</button>
     <button role="tab" id="tab-cfg" aria-selected="false" data-tab="cfg">Ajustes</button>
   </nav>
@@ -170,42 +190,38 @@ body.login nav.tabs{display:none}
         <button class="chip" data-f="agot" aria-pressed="false">Agotados</button>
         <button class="chip" data-f="enc" aria-pressed="false">Con encargos</button>
       </div>
-      <p class="note">«Vender 1» descuenta una unidad y apunta la venta. «Stock − / +» es solo para corregir recuentos (las entradas de mercancía van en Pedidos).</p>
+      <p class="note">«Vender 1» descuenta una unidad y apunta la venta. «Stock − / +» es solo para corregir recuentos (las entradas de mercancía van en «Encargos y pedidos»).</p>
       <div id="lista"></div>
     </div>
   </section>
 
   <!-- ENCARGOS -->
   <section id="v-enc" hidden>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <details id="dEnc"><summary style="font-weight:600;color:var(--fg)">＋ Nuevo encargo</summary>
-      <form class="panel" id="fEnc" autocomplete="off" style="margin-top:8px">
-        <div class="grid2">
-          <div class="field"><label for="eProd">Producto</label><select id="eProd" required></select></div>
-          <div class="field"><label for="eCant">Cantidad</label><input id="eCant" type="number" min="1" value="1" required></div>
-          <div class="field"><label for="eCli">Cliente</label><input id="eCli" placeholder="Nombre o vecino"></div>
-          <div class="field"><label for="eCon">Contacto</label><input id="eCon" placeholder="Teléfono, piso…"></div>
-        </div>
-        <div class="field"><label for="eNota">Nota</label><input id="eNota" placeholder="Opcional"></div>
-        <label class="chk"><input type="checkbox" id="ePag"> Ya está pagado</label>
-        <div class="bar"><button class="btn" type="submit">Apuntar encargo</button></div>
-      </form>
-      </details>
-      <div class="eq"><input id="encQ" type="search" placeholder="Buscar cliente, producto o nota…" aria-label="Buscar encargos"><span class="eres" id="encRes"></span></div>
-      <div class="box" id="faltan"></div>
-      <h3>Pendientes</h3>
-      <div class="cards" id="encPend"></div>
-      <details><summary>Entregados y cancelados</summary><div class="egrp" id="encHist" style="margin-top:8px"></div></details>
-    </div>
-  </section>
-
-  <!-- PEDIDOS -->
-  <section id="v-ped" hidden>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <p class="note">Al marcar un pedido como recibido, sus unidades se suman al stock (y a la página pública).</p>
-      <div class="cards" id="peds"></div>
-      <form class="panel" id="fPed" autocomplete="off">
-        <h2>Nuevo pedido al proveedor</h2>
+    <div class="encped">
+      <div class="colEnc">
+        <h2 class="colh">Encargos</h2>
+        <details id="dEnc"><summary style="font-weight:600;color:var(--fg)">＋ Nuevo encargo</summary>
+        <form class="panel" id="fEnc" autocomplete="off" style="margin-top:8px">
+          <div class="grid2">
+            <div class="field"><label for="eProd">Producto</label><select id="eProd" required></select></div>
+            <div class="field"><label for="eCant">Cantidad</label><input id="eCant" type="number" min="1" value="1" required></div>
+            <div class="field"><label for="eCli">Cliente</label><input id="eCli" placeholder="Nombre o vecino"></div>
+            <div class="field"><label for="eCon">Contacto</label><input id="eCon" placeholder="Teléfono, piso…"></div>
+          </div>
+          <div class="field"><label for="eNota">Nota</label><input id="eNota" placeholder="Opcional"></div>
+          <label class="chk"><input type="checkbox" id="ePag"> Ya está pagado</label>
+          <div class="bar"><button class="btn" type="submit">Apuntar encargo</button></div>
+        </form>
+        </details>
+        <div class="eq"><input id="encQ" type="search" placeholder="Buscar cliente, producto o nota…" aria-label="Buscar encargos"><span class="eres" id="encRes"></span></div>
+        <div class="cards" id="encPend"></div>
+        <details><summary>Entregados y cancelados</summary><div class="egrp" id="encHist" style="margin-top:8px"></div></details>
+      </div>
+      <aside class="colPed" aria-label="Pedidos al proveedor">
+        <h2 class="colh">Pedidos al proveedor</h2>
+        <div class="box" id="faltan"></div>
+        <details id="dPed"><summary style="font-weight:600;color:var(--fg)">＋ Nuevo pedido</summary>
+        <form class="panel" id="fPed" autocomplete="off" style="margin-top:8px">
         <div class="grid2">
           <div class="field"><label for="pNom">Nombre</label><input id="pNom" placeholder="Ej.: Tercer pedido"></div>
           <div class="field"><label for="pFec">Fecha</label><input id="pFec" type="date"></div>
@@ -215,6 +231,10 @@ body.login nav.tabs{display:none}
         <div class="bar"><button class="btn ghost" type="button" id="pAdd">+ Añadir línea</button><span class="small" id="pTot"></span></div>
         <div class="bar"><button class="btn" type="submit">Guardar pedido (pendiente)</button></div>
       </form>
+        </details>
+        <div class="cards" id="peds"></div>
+        <p class="note">Al marcar un pedido como recibido, sus unidades se suman al stock (y a la página pública).</p>
+      </aside>
     </div>
   </section>
 
@@ -495,11 +515,12 @@ function filaEnc(e,hist){
   const mt=[hist?fmtF(e.fecha):String(fmtF(e.fecha)).slice(0,5)];
   if(hist){ if(e.cliente) mt.push('<strong>'+esc(e.cliente)+'</strong>'); mt.push(e.estado==='entregado'?'Entregado '+fmtF(e.fechaEntrega):'Cancelado'); }
   if(e.nota) mt.push(esc(e.nota));
-  if(!hist&&falta) mt.push('<span class="warn">falta '+falta+'</span>');
+  if(!hist&&falta){ const x=Rcob&&Rcob.porRef[e.ref]; const sinCubrir=x?x.encP-n(x.stock)-x.pend:falta;
+    mt.push(sinCubrir>0?'<span class="warn">falta '+falta+'</span>':'<span class="enp">llega en pedido</span>'); }
   return '<div class="erow"><div class="line1"><span class="ref">'+esc(e.ref)+'</span><span class="nm">'+esc(p?p.nombre:e.ref)+'</span><span class="q">× '+n(e.cant)+'</span><span class="imp">'+eur0(imp)+'</span></div>'
     +'<div class="l2"><span class="mt">'+mt.join(' · ')+'</span><div class="acc">'+acc+'</div></div></div>';
 }
-let encQ='';
+let encQ='', Rcob=null;
 function coincideEnc(e){
   if(!encQ) return true; const p=prod(e.ref);
   return claveCli([e.cliente,e.contacto,e.nota,e.ref,p?.nombre,p?.marca].join(' ')).includes(encQ);
@@ -507,6 +528,7 @@ function coincideEnc(e){
 function pintarEnc(){
   const ok=conectado&&G;
   $('eProd').innerHTML=opcionesProd($('eProd').value);
+  Rcob=ok?calc():null;
   if(!ok){ $('encPend').innerHTML='<div class="empty">Conecta en Ajustes para gestionar encargos.</div>'; $('encHist').innerHTML=''; $('faltan').hidden=true; $('encRes').textContent=''; return; }
   const todosPend=G.encargos.filter(e=>e.estado==='pendiente');
   // Si la búsqueda coincide con algún encargo de un cliente, se muestra su pedido completo
@@ -533,31 +555,41 @@ function pintarEnc(){
   $('encRes').textContent=pend.length?L.length+' cliente'+(L.length===1?'':'s')+' · '+tU+' uds · '+eur0(tE)+(tD?' · sin cobrar '+eur0(tD):''):'';
   const hist=G.encargos.filter(e=>e.estado!=='pendiente').filter(coincideEnc).slice(-40).reverse();
   $('encHist').innerHTML=hist.length?hist.map(e=>filaEnc(e,true)).join(''):'<p class="small" style="padding:8px 12px;margin:0">Nada todavía.</p>';
-  const R=calc(); const nec=[];
-  for(const p of stock.productos){ const x=R.porRef[p.ref]; const f=x.encP-n(p.stock)-x.pend; if(f>0) nec.push({ref:p.ref,cant:f}); }
-  $('faltan').hidden=!nec.length;
-  $('faltan').innerHTML=nec.length
-    ? '<strong>Para cubrir los encargos hay que pedir:</strong><div class="small">'+nec.map(x=>esc(nom(x.ref))+' × '+x.cant).join(' · ')+'</div><div><button class="btn ghost" id="pedirFalt" type="button"'+(ocupado?' disabled':'')+'>Preparar pedido con esto</button></div>'
-    : '';
+  // Cobertura de encargos: lo encargado frente a stock y pedidos por llegar
+  const R=Rcob, filas=[], nec=[];
+  for(const p of stock.productos){ const x=R.porRef[p.ref]; if(!x||!x.encP) continue; const f=x.encP-n(p.stock)-x.pend; filas.push({p,x,f}); if(f>0) nec.push({ref:p.ref,cant:f}); }
+  filas.sort((a,b)=>(b.f>0)-(a.f>0)||b.f-a.f||String(a.p.ref).localeCompare(String(b.p.ref)));
+  const totF=nec.reduce((a,x)=>a+x.cant,0);
+  $('faltan').hidden=false;
+  $('faltan').innerHTML=filas.length
+    ? '<strong>Cobertura de los encargos</strong>'
+      +'<div class="tbl"><table class="cob"><thead><tr><th class="l">Producto</th><th title="Unidades encargadas pendientes">Enc.</th><th>Stock</th><th title="En pedidos pendientes de recibir">Llega</th><th>Falta</th></tr></thead><tbody>'
+      +filas.map(({p,x,f})=>'<tr><td class="l"><span class="ref">'+esc(p.ref)+'</span> '+esc(p.nombre)+'</td><td>'+x.encP+'</td><td>'+n(p.stock)+'</td><td>'+(x.pend||'·')+'</td><td>'+(f>0?'<span class="fl">'+f+'</span>':'<span class="ok">✓</span>')+'</td></tr>').join('')
+      +'</tbody></table></div>'
+      +(nec.length?'<div><button class="btn" id="pedirFalt" type="button"'+(ocupado?' disabled':'')+'>Pedir lo que falta ('+totF+' ud'+(totF===1?'':'s')+')</button></div>'
+        :'<span class="small">Todo lo encargado está cubierto por el stock y los pedidos por llegar.</span>')
+    : '<span class="small">No hay encargos pendientes. Para pedir stock suelto usa «＋ Nuevo pedido».</span>';
 }
 $('encQ').addEventListener('input',ev=>{ encQ=claveCli(ev.target.value); pintarEnc(); });
+function cardPed(pd){
+  const off=ocupado; let u=0,c=0,v=0; for(const l of pd.lineas){ u+=n(l.cant); c+=n(l.cant)*Number(l.coste||0); v+=n(l.cant)*precio(l.ref); }
+  const rec=pd.estado==='recibido';
+  return '<div class="card"><div class="top"><span class="tt">'+esc(pd.nombre||'Pedido')+'</span><span class="badge '+(rec?'on':'off')+'">'+(rec?'Recibido '+fmtF(pd.fechaRecibido):'Por llegar')+'</span></div>'
+    +'<div class="small">'+fmtF(pd.fecha)+' · '+u+' uds · coste '+eur(c)+' · venta '+eur(v)+'</div>'
+    +'<details><summary>Ver líneas</summary><div class="tbl"><table class="cob"><thead><tr><th class="l">Producto</th><th>Uds</th><th>Coste/ud</th><th>Total</th></tr></thead><tbody>'
+    +pd.lineas.map(l=>'<tr><td class="l">'+esc(nom(l.ref))+'</td><td>'+n(l.cant)+'</td><td>'+eur(Number(l.coste||0))+'</td><td>'+eur(n(l.cant)*Number(l.coste||0))+'</td></tr>').join('')+'</tbody></table></div></details>'
+    +'<div class="row2">'+(rec
+      ?'<button class="btn ghost" data-ped="desrecibir" data-id="'+esc(pd.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Deshacer recepción</button>'
+      :'<button class="btn" data-ped="recibir" data-id="'+esc(pd.id)+'"'+(off?' disabled':'')+'>Marcar recibido</button><button class="btn ghost" data-ped="borrar" data-id="'+esc(pd.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Eliminar</button>')
+    +'</div></div>';
+}
 function pintarPed(){
   const ok=conectado&&G;
   if(!ok){ $('peds').innerHTML='<div class="empty">Conecta en Ajustes para ver los pedidos.</div>'; return; }
-  const off=ocupado;
   const L=G.pedidos.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
-  $('peds').innerHTML=L.length?L.map(pd=>{
-    let u=0,c=0,v=0; for(const l of pd.lineas){ u+=n(l.cant); c+=n(l.cant)*Number(l.coste||0); v+=n(l.cant)*precio(l.ref); }
-    const rec=pd.estado==='recibido';
-    return '<div class="card"><div class="top"><span class="tt">'+esc(pd.nombre||'Pedido')+'</span><span class="badge '+(rec?'on':'off')+'">'+(rec?'Recibido '+fmtF(pd.fechaRecibido):'Pendiente')+'</span></div>'
-      +'<div class="small">'+fmtF(pd.fecha)+' · '+u+' uds · coste '+eur(c)+' · venta '+eur(v)+' · beneficio '+eur(v-c)+'</div>'
-      +'<details><summary>Ver líneas</summary><div class="tbl"><table><thead><tr><th class="l">Producto</th><th>Uds</th><th>Coste/ud</th><th>Total</th></tr></thead><tbody>'
-      +pd.lineas.map(l=>'<tr><td class="l">'+esc(nom(l.ref))+'</td><td>'+n(l.cant)+'</td><td>'+eur(Number(l.coste||0))+'</td><td>'+eur(n(l.cant)*Number(l.coste||0))+'</td></tr>').join('')+'</tbody></table></div></details>'
-      +'<div class="row2">'+(rec
-        ?'<button class="btn ghost" data-ped="desrecibir" data-id="'+esc(pd.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Deshacer recepción</button>'
-        :'<button class="btn" data-ped="recibir" data-id="'+esc(pd.id)+'"'+(off?' disabled':'')+'>Marcar recibido (sumar al stock)</button><button class="btn ghost" data-ped="borrar" data-id="'+esc(pd.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Eliminar</button>')
-      +'</div></div>';
-  }).join(''):'<div class="empty">No hay pedidos registrados.</div>';
+  const pend=L.filter(pd=>pd.estado!=='recibido'), rec=L.filter(pd=>pd.estado==='recibido');
+  $('peds').innerHTML=(pend.length?pend.map(cardPed).join(''):'<p class="small" style="margin:0">No hay pedidos por llegar.</p>')
+    +(rec.length?'<details><summary>Recibidos ('+rec.length+')</summary><div class="cards" style="margin-top:8px">'+rec.map(cardPed).join('')+'</div></details>':'');
 }
 function pintarVen(){
   if(!(conectado&&G)){ $('tVen').innerHTML='<p class="note" style="padding:12px">Conecta en Ajustes para ver las ventas.</p>'; return; }
@@ -715,7 +747,7 @@ document.addEventListener('click',async ev=>{
       if(v.encargo){ const e=g.encargos.find(x=>x.id===v.encargo); if(e){ e.estado='pendiente'; delete e.fechaEntrega; delete e.venta; } } return true; });
     return; }
   if(b.id==='pedirFalt'){ const R=calc(); $('pLineas').innerHTML=''; for(const p of stock.productos){ const x=R.porRef[p.ref]; const f=x.encP-n(p.stock)-x.pend; if(f>0) addLinea(p.ref,f); }
-    $('pNom').value='Pedido para encargos'; setTab('ped'); $('fPed').scrollIntoView({behavior:'smooth'}); return; }
+    $('pNom').value='Pedido para encargos'; setTab('enc'); $('dPed').open=true; totPed(); $('fPed').scrollIntoView({behavior:'smooth',block:'center'}); return; }
   if(b.id==='pAdd'){ addLinea(); return; }
   if(b.classList.contains('x')){ b.closest('.line').remove(); totPed(); return; }
 });
@@ -745,7 +777,7 @@ function totPed(){ const L=lineasPed(); let u=0,c=0; for(const l of L){u+=l.cant
 $('fPed').addEventListener('submit',async e=>{ e.preventDefault(); if(!conectado) return toast('Conecta primero en Ajustes');
   const L=lineasPed(); if(!L.length) return toast('Añade al menos una línea');
   const pd={id:uid(),nombre:$('pNom').value.trim()||'Pedido',fecha:$('pFec').value||hoy(),estado:'pendiente',lineas:L};
-  if(await guardar('Nuevo pedido: '+pd.nombre,(s,g)=>{ g.pedidos.push(clon(pd)); return false; })){ $('fPed').reset(); $('pLineas').innerHTML=''; addLinea(); toast('Pedido guardado como pendiente'); } });
+  if(await guardar('Nuevo pedido: '+pd.nombre,(s,g)=>{ g.pedidos.push(clon(pd)); return false; })){ $('fPed').reset(); $('pLineas').innerHTML=''; addLinea(); $('dPed').open=false; toast('Pedido guardado como pendiente'); } });
 
 /* --- costes --- */
 $('fCost').addEventListener('submit',async e=>{ e.preventDefault(); const c={}; for(const k of stock.categorias){ const v=parseFloat($('co_'+k.id).value); if(!isNaN(v)) c[k.id]=v; }
@@ -850,7 +882,7 @@ $('nProbar').onclick=async()=>{ const canal=$('nCanal').value.trim(); if(!canal)
 $('nCopiar').onclick=async()=>{ try{ await navigator.clipboard.writeText($('nCanal').value.trim()); toast('Canal copiado'); }catch(e){ toast('Cópialo a mano'); } };
 
 /* ========== pestañas y arranque ========== */
-function setTab(t){ tab=t; for(const k of ['panel','stock','enc','ped','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
+function setTab(t){ tab=t; document.body.classList.toggle('ancho',t==='enc'); for(const k of ['panel','stock','enc','ven','cfg','vend','login']){ $('v-'+k).hidden=(k!==t); const b=$('tab-'+k); if(b) b.setAttribute('aria-selected',String(k===t)); } }
 leerCfg(); const recienConfigurado=leerEnlaceConfig(); rellenarForm(); $('pFec').value=hoy();
 if(cfg.modo==='vendedor'){ document.body.classList.add('vendedor'); document.querySelector('.eyebrow').textContent='Venta solidaria · 4.º ESO'; setTab('vend'); }
 // Desde «Acceso administradores» (?admin) un móvil en modo vendedor puede pasar a gestión completa con la contraseña

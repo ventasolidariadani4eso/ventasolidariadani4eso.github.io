@@ -51,14 +51,18 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
 
 - **Panel**: ingresos, beneficio obtenido, invertido y % recuperado, saldo de caja, stock, encargos, pedidos por llegar
   y beneficio previsto; tablas por categoría y por producto (avisa con ≠ si el stock no cuadra).
-- **Stock**: *Vender 1* (descuenta y apunta la venta), *Encargo* (abre el formulario con el producto),
+- **Stock**: *Vender 1* (descuenta y apunta la venta), *Encargo* (abre el formulario de encargo con el producto),
   *Stock − / +* solo para corregir recuentos, *Muestra*.
-- **Encargos**: tarjetas compactas **agrupadas por cliente** (3 por fila en ordenador), cada una con sus unidades,
-  total y lo que debe. Buscador por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto,
-  nota y si está pagado). Por línea: *Pagado/Sin pagar*, *Entregar* (lo convierte en venta y descuenta stock) y ✕
-  para cancelar; *Entregar todo* entrega el pedido completo de un cliente de una vez (solo si hay stock para todo).
-  *Reabrir* en «Entregados y cancelados». Indica qué hay que pedir para cubrir los encargos y prepara el pedido.
-- **Pedidos**: pedidos al proveedor con su coste. *Marcar recibido* suma las unidades al stock (y a la web pública).
+- **Encargos y pedidos** (una sola pestaña, en paralelo: encargos a la izquierda y pedidos al proveedor a la derecha;
+  en el móvil, uno debajo de otro):
+  - *Encargos*: tarjetas compactas **agrupadas por cliente**, cada una con sus unidades, total y lo que debe. Buscador
+    por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto, nota y si está pagado).
+    Por línea: *Pagado/Sin pagar*, *Entregar* (lo convierte en venta y descuenta stock) y ✕ para cancelar;
+    *Entregar todo* entrega el pedido completo de un cliente de una vez (solo si hay stock para todo).
+    Si falta stock, cada línea dice «falta N» o «llega en pedido». *Reabrir* en «Entregados y cancelados».
+  - *Pedidos al proveedor*: tabla **Cobertura de los encargos** (encargado · stock · llega · falta, por producto) y botón
+    *Pedir lo que falta*, que prepara el pedido con esas unidades. *Nuevo pedido* plegado para pedir stock suelto.
+    Pedidos por llegar con *Marcar recibido* (suma las unidades al stock y a la web pública) y los recibidos plegados.
 - **Ventas**: lista con importe y beneficio; *Anular* devuelve las unidades al stock.
 - **Ajustes**: conexión, costes por unidad, exportar / importar copia y actividad reciente.
 
