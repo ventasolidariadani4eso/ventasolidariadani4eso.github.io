@@ -632,6 +632,9 @@ function alinearAhora(){
   if(Math.abs(d)>1){ if(d>0) boxR.style.marginTop=d+'px'; else boxL.style.marginTop=(-d)+'px'; }
 }
 addEventListener('resize',alinearTablas);
+// En ordenador (dos columnas) el formulario «Nuevo encargo» va desplegado: ocupa el hueco que queda frente a los
+// pedidos por llegar y está siempre a mano. En móvil sigue plegado.
+if(matchMedia('(min-width:1000px)').matches) $('dEnc').open=true;
 $('v-enc').addEventListener('toggle',alinearTablas,true);
 function pintarEnc(){
   const ok=conectado&&G;

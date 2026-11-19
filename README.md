@@ -62,7 +62,7 @@ Es HTML estático, sin servidor ni IA: funciona en GitHub Pages y se mantiene so
       su ficha con *Pagado/Sin pagar*, *Entregar*, ✕ (cancelar) y «Ver su pedido completo».
     - **Por cliente**: tarjetas agrupadas por cliente con sus unidades, total y lo que debe, y *Entregar todo* para
       entregar el pedido completo de un cliente de una vez (solo si hay stock para todo).
-    Buscador por cliente, producto o nota. *Nuevo encargo* está plegado arriba (cliente, contacto, nota y si está
+    Buscador por cliente, producto o nota. *Nuevo encargo* está arriba (desplegado en ordenador, plegado en el móvil) (cliente, contacto, nota y si está
     pagado). *Reabrir* en «Entregados y cancelados».
   - *Pedidos al proveedor*: arriba los pedidos por llegar y debajo la tabla **Cobertura de los encargos**, alineada
     fila a fila con la tabla de encargos (en ordenador cada colonia queda a la misma altura en las dos columnas) (encargado · stock · llega · falta, por producto) y botón

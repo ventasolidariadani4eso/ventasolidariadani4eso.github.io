@@ -122,7 +122,8 @@ Precio y coste se guardan en cada venta.
     *Entregar*, ✕ y «Ver su pedido completo» (`data-ecli`: pasa a *Por cliente* filtrando por ese cliente).
   - **Por cliente**: las tarjetas por cliente descritas a continuación (con *Entregar todo*), en cuadrícula
     `#encPend.porCli`.
-  - Formulario *Nuevo encargo* plegado en `<details id="dEnc">`; se abre solo al venir del botón *Encargo* de Stock.
+  - Formulario *Nuevo encargo* en `<details id="dEnc">`: **desplegado de inicio en ordenador** (≥ 1000 px, ocupa el
+    hueco frente a los pedidos por llegar) y plegado en móvil; se abre también al venir del botón *Encargo* de Stock.
   - Buscador `#encQ` (cliente, contacto, nota, ref, nombre, marca). Si coincide algún encargo de un cliente, se muestra
     **el pedido completo** de ese cliente. Al lado, resumen: clientes · uds · € · sin cobrar.
   - Pendientes **agrupados por cliente** con `claveCli()` (sin distinguir mayúsculas, tildes ni espacios: «María» =
