@@ -83,6 +83,28 @@ body.login nav.tabs{display:none}
 .erow .x{width:34px;height:34px;font-size:15px;line-height:1}
 .erow .x[data-armado]{width:auto;padding:0 8px;font-size:12px}
 @media (max-width:560px){.erow{grid-template-columns:minmax(0,1fr)}.erow .acc{justify-content:flex-start}}
+.erow .imp{margin-left:auto;padding-left:8px}
+.erow{display:flex;flex-direction:column;align-items:stretch}
+.erow .line1{display:flex;align-items:baseline;flex-wrap:wrap}
+.erow .l2{display:flex;align-items:center;gap:4px 8px;flex-wrap:wrap}
+.erow .l2 .mt{flex:1 1 auto;min-width:0}
+.erow .l2 .acc{margin-left:auto}
+.erow .acc{flex-wrap:wrap}
+/* Tarjetas de cliente en cuadrícula: 3 por fila en ordenador, 2 en tablet, 1 en móvil */
+#encPend{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;align-items:start}
+#encPend>.empty{grid-column:1/-1}
+#encPend .egrp{border-radius:8px}
+#encPend .ehead{padding:6px 10px;gap:2px 8px}
+#encPend .ehead .who{font-size:14px}
+#encPend .ehead .tot{font-size:12.5px;gap:6px;flex-wrap:wrap}
+#encPend .ehead .badge{font-size:10.5px;padding:1px 6px}
+#encPend .erow{gap:2px;padding:5px 10px}
+#encPend .erow .nm{font-size:14px}
+#encPend .erow .acc{justify-content:flex-start;gap:5px}
+#encPend .erow .btn,#encPend .erow .mtg{min-height:30px;padding:0 9px;font-size:12.5px}
+#encPend .erow .x{width:30px;height:30px;font-size:13px}
+#encPend .ehead .todo{min-height:28px;padding:0 8px;font-size:12px}
+#faltan{padding:8px 12px;gap:4px}
 </style>
 </head>
 <body>
@@ -464,18 +486,18 @@ function opcionesProd(sel){
 const claveCli=c=>String(c||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
 function filaEnc(e,hist){
   const p=prod(e.ref), s=n(p?.stock), off=!conectado||ocupado, falta=Math.max(0,n(e.cant)-s), imp=n(e.cant)*precio(e.ref);
-  let acc='<span class="imp">'+eur0(imp)+'</span>';
+  let acc='';
   if(!hist){
     acc+='<button class="mtg" aria-pressed="'+(e.pagado?'true':'false')+'" data-enc="pagado" data-id="'+esc(e.id)+'"'+(off?' disabled':'')+'>'+(e.pagado?'Pagado':'Sin pagar')+'</button>'
       +'<button class="btn" data-enc="entregar" data-id="'+esc(e.id)+'"'+(falta||off?' disabled':'')+'>Entregar</button>'
       +'<button class="x" title="Cancelar encargo" aria-label="Cancelar encargo" data-enc="cancelar" data-id="'+esc(e.id)+'" data-confirm="1"'+(off?' disabled':'')+'>✕</button>';
   } else acc+='<button class="btn ghost" data-enc="reabrir" data-id="'+esc(e.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Reabrir</button>';
-  const mt=[fmtF(e.fecha)];
+  const mt=[hist?fmtF(e.fecha):String(fmtF(e.fecha)).slice(0,5)];
   if(hist){ if(e.cliente) mt.push('<strong>'+esc(e.cliente)+'</strong>'); mt.push(e.estado==='entregado'?'Entregado '+fmtF(e.fechaEntrega):'Cancelado'); }
   if(e.nota) mt.push(esc(e.nota));
-  return '<div class="erow"><div class="info"><div class="line1"><span class="ref">'+esc(e.ref)+'</span><span class="nm">'+esc(p?p.nombre:e.ref)+'</span><span class="q">× '+n(e.cant)+'</span></div>'
-    +'<div class="mt">'+mt.join(' · ')+(!hist&&falta?' · <span class="warn">falta stock: pedir '+falta+'</span>':'')+'</div></div>'
-    +'<div class="acc">'+acc+'</div></div>';
+  if(!hist&&falta) mt.push('<span class="warn">falta '+falta+'</span>');
+  return '<div class="erow"><div class="line1"><span class="ref">'+esc(e.ref)+'</span><span class="nm">'+esc(p?p.nombre:e.ref)+'</span><span class="q">× '+n(e.cant)+'</span><span class="imp">'+eur0(imp)+'</span></div>'
+    +'<div class="l2"><span class="mt">'+mt.join(' · ')+'</span><div class="acc">'+acc+'</div></div></div>';
 }
 let encQ='';
 function coincideEnc(e){
