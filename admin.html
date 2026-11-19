@@ -61,6 +61,26 @@ body.vendedor nav.tabs{display:none}
 .vform .btn{grid-column:1/-1;justify-content:center}
 @media (max-width:480px){.vform{grid-template-columns:minmax(0,1fr) 70px}.vform .cli{grid-column:1/-1}}
 body.login nav.tabs{display:none}
+/* Encargos agrupados por cliente (vista compacta) */
+.eq{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.eq input{font:inherit;flex:1 1 220px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);min-height:40px}
+.eres{font-size:13px;color:var(--muted)}
+.egrp{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ehead{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap;padding:8px 12px;background:var(--chip)}
+.ehead .who{font-weight:600;font-size:15px}
+.ehead .ct{font-size:12.5px;color:var(--muted);margin-left:6px}
+.ehead .tot{font-size:13px;font-variant-numeric:tabular-nums;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 12px;border-top:1px solid var(--line)}
+.erow:first-of-type{border-top:0}
+.erow .line1{gap:6px}
+.erow .q{font-weight:600;font-variant-numeric:tabular-nums}
+.erow .mt{font-size:12px;color:var(--muted)}
+.erow .acc{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.erow .imp{font-variant-numeric:tabular-nums;font-size:14px;min-width:44px;text-align:right}
+.erow .btn,.erow .mtg{min-height:34px;padding:0 10px;font-size:13px}
+.erow .x{width:34px;height:34px;font-size:15px;line-height:1}
+.erow .x[data-armado]{width:auto;padding:0 8px;font-size:12px}
+@media (max-width:560px){.erow{grid-template-columns:minmax(0,1fr)}.erow .acc{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -134,8 +154,8 @@ body.login nav.tabs{display:none}
   <!-- ENCARGOS -->
   <section id="v-enc" hidden>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <form class="panel" id="fEnc" autocomplete="off">
-        <h2>Nuevo encargo</h2>
+      <details id="dEnc"><summary style="font-weight:600;color:var(--fg)">＋ Nuevo encargo</summary>
+      <form class="panel" id="fEnc" autocomplete="off" style="margin-top:8px">
         <div class="grid2">
           <div class="field"><label for="eProd">Producto</label><select id="eProd" required></select></div>
           <div class="field"><label for="eCant">Cantidad</label><input id="eCant" type="number" min="1" value="1" required></div>
@@ -146,10 +166,12 @@ body.login nav.tabs{display:none}
         <label class="chk"><input type="checkbox" id="ePag"> Ya está pagado</label>
         <div class="bar"><button class="btn" type="submit">Apuntar encargo</button></div>
       </form>
+      </details>
+      <div class="eq"><input id="encQ" type="search" placeholder="Buscar cliente, producto o nota…" aria-label="Buscar encargos"><span class="eres" id="encRes"></span></div>
       <div class="box" id="faltan"></div>
       <h3>Pendientes</h3>
       <div class="cards" id="encPend"></div>
-      <details><summary>Entregados y cancelados</summary><div class="cards" id="encHist" style="margin-top:8px"></div></details>
+      <details><summary>Entregados y cancelados</summary><div class="egrp" id="encHist" style="margin-top:8px"></div></details>
     </div>
   </section>
 
@@ -437,36 +459,58 @@ function opcionesProd(sel){
   if(!stock) return '';
   return stock.categorias.map(c=>'<optgroup label="'+esc(c.nombre)+' · '+esc(c.precio)+' €">'+VS.ordenados(stock,c.id).map(p=>'<option value="'+esc(p.ref)+'"'+(p.ref===sel?' selected':'')+'>'+esc(p.ref)+' '+esc(p.nombre)+(p.marca?' ('+esc(p.marca)+')':'')+' · stock '+n(p.stock)+'</option>').join('')+'</optgroup>').join('');
 }
-function cardEnc(e,hist){
-  const p=prod(e.ref), s=n(p?.stock), off=!conectado||ocupado, falta=Math.max(0,n(e.cant)-s);
-  const imp=n(e.cant)*precio(e.ref);
-  let acc='';
+const claveCli=c=>String(c||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
+function filaEnc(e,hist){
+  const p=prod(e.ref), s=n(p?.stock), off=!conectado||ocupado, falta=Math.max(0,n(e.cant)-s), imp=n(e.cant)*precio(e.ref);
+  let acc='<span class="imp">'+eur0(imp)+'</span>';
   if(!hist){
-    acc='<button class="btn" data-enc="entregar" data-id="'+esc(e.id)+'"'+(falta||off?' disabled':'')+'>Entregar</button>'
-      +'<button class="mtg" aria-pressed="'+(e.pagado?'true':'false')+'" data-enc="pagado" data-id="'+esc(e.id)+'"'+(off?' disabled':'')+'>'+(e.pagado?'Pagado':'Sin pagar')+'</button>'
-      +'<button class="btn ghost" data-enc="cancelar" data-id="'+esc(e.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Cancelar</button>';
-  } else acc='<button class="btn ghost" data-enc="reabrir" data-id="'+esc(e.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Reabrir</button>';
-  return '<div class="card"><div class="top"><span class="tt">'+esc(nom(e.ref))+' × '+n(e.cant)+'</span><span>'+eur0(imp)+'</span></div>'
-    +'<div class="small">'+fmtF(e.fecha)+(e.cliente?' · <strong>'+esc(e.cliente)+'</strong>':'')+(e.contacto?' · '+esc(e.contacto):'')+(e.nota?' · '+esc(e.nota):'')
-    +(hist?' · '+(e.estado==='entregado'?'Entregado '+fmtF(e.fechaEntrega):'Cancelado'):'')+'</div>'
-    +(!hist&&falta?'<div class="warn">Falta stock: pedir '+falta+' ud'+(falta>1?'s':'')+'.</div>':'')
-    +'<div class="row2">'+acc+'</div></div>';
+    acc+='<button class="mtg" aria-pressed="'+(e.pagado?'true':'false')+'" data-enc="pagado" data-id="'+esc(e.id)+'"'+(off?' disabled':'')+'>'+(e.pagado?'Pagado':'Sin pagar')+'</button>'
+      +'<button class="btn" data-enc="entregar" data-id="'+esc(e.id)+'"'+(falta||off?' disabled':'')+'>Entregar</button>'
+      +'<button class="x" title="Cancelar encargo" aria-label="Cancelar encargo" data-enc="cancelar" data-id="'+esc(e.id)+'" data-confirm="1"'+(off?' disabled':'')+'>✕</button>';
+  } else acc+='<button class="btn ghost" data-enc="reabrir" data-id="'+esc(e.id)+'" data-confirm="1"'+(off?' disabled':'')+'>Reabrir</button>';
+  const mt=[fmtF(e.fecha)];
+  if(hist){ if(e.cliente) mt.push('<strong>'+esc(e.cliente)+'</strong>'); mt.push(e.estado==='entregado'?'Entregado '+fmtF(e.fechaEntrega):'Cancelado'); }
+  if(e.nota) mt.push(esc(e.nota));
+  return '<div class="erow"><div class="info"><div class="line1"><span class="ref">'+esc(e.ref)+'</span><span class="nm">'+esc(p?p.nombre:e.ref)+'</span><span class="q">× '+n(e.cant)+'</span></div>'
+    +'<div class="mt">'+mt.join(' · ')+(!hist&&falta?' · <span class="warn">falta stock: pedir '+falta+'</span>':'')+'</div></div>'
+    +'<div class="acc">'+acc+'</div></div>';
+}
+let encQ='';
+function coincideEnc(e){
+  if(!encQ) return true; const p=prod(e.ref);
+  return claveCli([e.cliente,e.contacto,e.nota,e.ref,p?.nombre,p?.marca].join(' ')).includes(encQ);
 }
 function pintarEnc(){
   const ok=conectado&&G;
   $('eProd').innerHTML=opcionesProd($('eProd').value);
-  if(!ok){ $('encPend').innerHTML='<div class="empty">Conecta en Ajustes para gestionar encargos.</div>'; $('encHist').innerHTML=''; $('faltan').hidden=true; return; }
-  const pend=G.encargos.filter(e=>e.estado==='pendiente').sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
-  const hist=G.encargos.filter(e=>e.estado!=='pendiente').slice(-40).reverse();
-  $('encPend').innerHTML=pend.length?pend.map(e=>cardEnc(e,false)).join(''):'<div class="empty">No hay encargos pendientes.</div>';
-  $('encHist').innerHTML=hist.length?hist.map(e=>cardEnc(e,true)).join(''):'<p class="small">Nada todavía.</p>';
+  if(!ok){ $('encPend').innerHTML='<div class="empty">Conecta en Ajustes para gestionar encargos.</div>'; $('encHist').innerHTML=''; $('faltan').hidden=true; $('encRes').textContent=''; return; }
+  const todosPend=G.encargos.filter(e=>e.estado==='pendiente');
+  const pend=todosPend.filter(coincideEnc).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  // Agrupar por cliente (sin distinguir mayúsculas, tildes ni espacios)
+  const grupos=new Map();
+  for(const e of pend){ const k=claveCli(e.cliente); if(!grupos.has(k)) grupos.set(k,{nombre:String(e.cliente||'').trim(),items:[]}); grupos.get(k).items.push(e); }
+  const L=[...grupos.values()].sort((a,b)=>(a.nombre?0:1)-(b.nombre?0:1)||String(a.items[0].fecha).localeCompare(String(b.items[0].fecha)));
+  let tU=0,tE=0,tD=0;
+  $('encPend').innerHTML=L.length?L.map(g=>{
+    let u=0,eur=0,deb=0; const cts=[];
+    for(const e of g.items){ const imp=n(e.cant)*precio(e.ref); u+=n(e.cant); eur+=imp; if(!e.pagado) deb+=imp; const c=String(e.contacto||'').trim(); if(c&&!cts.includes(c)) cts.push(c); }
+    tU+=u; tE+=eur; tD+=deb;
+    const est=deb===0?'<span class="badge on">Pagado</span>':deb===eur?'<span class="badge off">Debe '+eur0(deb)+'</span>':'<span class="badge off">Debe '+eur0(deb)+' de '+eur0(eur)+'</span>';
+    return '<div class="egrp"><div class="ehead"><div><span class="who">'+(g.nombre?esc(g.nombre):'<em>Sin nombre</em>')+'</span>'+(cts.length?'<span class="ct">'+esc(cts.join(' · '))+'</span>':'')+'</div>'
+      +'<div class="tot"><span>'+u+' ud'+(u===1?'':'s')+' · '+eur0(eur)+'</span>'+est+'</div></div>'
+      +g.items.map(e=>filaEnc(e,false)).join('')+'</div>';
+  }).join(''):'<div class="empty">'+(encQ&&todosPend.length?'Ningún encargo pendiente coincide con la búsqueda.':'No hay encargos pendientes.')+'</div>';
+  $('encRes').textContent=pend.length?L.length+' cliente'+(L.length===1?'':'s')+' · '+tU+' uds · '+eur0(tE)+(tD?' · sin cobrar '+eur0(tD):''):'';
+  const hist=G.encargos.filter(e=>e.estado!=='pendiente').filter(coincideEnc).slice(-40).reverse();
+  $('encHist').innerHTML=hist.length?hist.map(e=>filaEnc(e,true)).join(''):'<p class="small" style="padding:8px 12px;margin:0">Nada todavía.</p>';
   const R=calc(); const nec=[];
   for(const p of stock.productos){ const x=R.porRef[p.ref]; const f=x.encP-n(p.stock)-x.pend; if(f>0) nec.push({ref:p.ref,cant:f}); }
-  $('faltan').hidden=false;
+  $('faltan').hidden=!nec.length;
   $('faltan').innerHTML=nec.length
     ? '<strong>Para cubrir los encargos hay que pedir:</strong><div class="small">'+nec.map(x=>esc(nom(x.ref))+' × '+x.cant).join(' · ')+'</div><div><button class="btn ghost" id="pedirFalt" type="button"'+(ocupado?' disabled':'')+'>Preparar pedido con esto</button></div>'
-    : '<span class="small">Los encargos pendientes están cubiertos por el stock y los pedidos por llegar.</span>';
+    : '';
 }
+$('encQ').addEventListener('input',ev=>{ encQ=claveCli(ev.target.value); pintarEnc(); });
 function pintarPed(){
   const ok=conectado&&G;
   if(!ok){ $('peds').innerHTML='<div class="empty">Conecta en Ajustes para ver los pedidos.</div>'; return; }
@@ -600,7 +644,7 @@ document.addEventListener('click',async ev=>{
     await guardar('Corrección de stock '+(d>0?'+1':'−1')+': '+nom(ref),(s,g)=>{ const p=pS(s,ref); p.stock=Math.max(0,n(p.stock)+d); g.ajustes[ref]=(Number(g.ajustes[ref])||0)+d; return true; }); return; }
   if(a==='muestra'){ const v=!prod(ref)?.muestra;
     await guardar((v?'Con muestra: ':'Sin muestra: ')+nom(ref),(s)=>{ pS(s,ref).muestra=v; return true; }); return; }
-  if(a==='encargar'){ setTab('enc'); $('eProd').value=ref; $('eCant').value=1; $('eCli').focus(); return; }
+  if(a==='encargar'){ setTab('enc'); $('dEnc').open=true; $('eProd').value=ref; $('eCant').value=1; $('eCli').focus(); return; }
   if(b.dataset.enc){ const e0=G.encargos.find(x=>x.id===id); if(!e0) return; const k=b.dataset.enc, f=hoy(), vid=uid();
     if(k==='entregar') await guardar('Encargo entregado: '+nom(e0.ref)+' × '+e0.cant+' · '+(n(e0.cant)*precio(e0.ref))+' €'+(e0.cliente?' · '+e0.cliente:''),(s,g)=>{
       const e=g.encargos.find(x=>x.id===id); if(!e||e.estado!=='pendiente') fallo('Ese encargo ya no está pendiente');
